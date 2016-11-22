@@ -15,12 +15,12 @@ import cc.stbl.demo.weapon.Task;
 
 public class LoginTask {
 
-    public static Task<String> login(final String email, final String password) {
+    public static Task<String> login(final String phone, final String password) {
         return new Task<String>() {
             @Override
             protected void call() {
                 JSONObject json = new JSONObject();
-                json.put("email", email);
+                json.put("phone", phone);
                 json.put("password", password);
                 try {
                     HttpResponse response = OkHttpHelper.getInstance().post(API.LOGIN, json);

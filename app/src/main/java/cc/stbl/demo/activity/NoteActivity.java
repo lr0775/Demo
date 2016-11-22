@@ -1,7 +1,6 @@
 package cc.stbl.demo.activity;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,7 +15,7 @@ import cc.stbl.demo.weapon.TaskError;
 
 public class NoteActivity extends BaseActivity {
 
-    private EditText mUsernameEt;
+    private EditText mPhoneEt;
     private EditText mPasswordEt;
     private Button mLoginBtn;
 
@@ -29,7 +28,7 @@ public class NoteActivity extends BaseActivity {
     }
 
     private void initView() {
-        mUsernameEt = (EditText) findViewById(R.id.et_username);
+        mPhoneEt = (EditText) findViewById(R.id.et_phone);
         mPasswordEt = (EditText) findViewById(R.id.et_password);
         mLoginBtn = (Button) findViewById(R.id.btn_login);
 
@@ -42,12 +41,12 @@ public class NoteActivity extends BaseActivity {
     }
 
     private void login() {
-        String username = mUsernameEt.getText().toString().trim();
+        String username = mPhoneEt.getText().toString().trim();
         String password = mPasswordEt.getText().toString().trim();
-        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
-            Toaster.show("账号/密码为空");
-            return;
-        }
+//        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+//            Toaster.show("手机号/密码为空");
+//            return;
+//        }
         String passEncrypt = EncryptUtils.encryptPassword(password);
         Logger.e("passEncrypt= " + passEncrypt);
         mLoginBtn.setEnabled(false);
