@@ -22,7 +22,9 @@
         </activity>
         <activity android:name=".activity.AlbumActivity" />
         <activity android:name=".activity.SampleSizeActivity" />
-        <activity android:name=".activity.NoteActivity"></activity>
+        <activity
+            android:name=".activity.NoteActivity"
+            android:windowSoftInputMode="stateVisible" />
     </application>
 
 </manifest>
