@@ -45,10 +45,11 @@ public class OkHttpHelper {
         mClient = new OkHttpClient();
     }
 
-    public HttpResponse get(String url) throws IOException {
+    public HttpResponse get(String method) throws IOException {
         if (!NetUtils.isNetworkAvailable()) {
             return new HttpResponse(new TaskError("网络不可用"), "");
         }
+        String url = API.HOST + method;
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("x-access-token", (String) SharedPrefUtils.getFromPublicFile(KEY.ACCESS_TOKEN, ""))

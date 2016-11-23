@@ -9,10 +9,10 @@ public class API {
     public static final String HOST = "http://192.168.1.141";
 
     public static final String LOGIN = "/login";
-    public static final String LOGOUT = "/logout";
     public static final String REGISTER = "/register";
 
-    public static final String NOTE = "/note";
+    public static final String NOTE = "/user/note";
+    public static final String LOGOUT = "/user/logout";
 
     public static final String ABOUT = "/about";
     public static final String NOTEPAD_CREATE = "/notepad/create";
