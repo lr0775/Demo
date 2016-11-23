@@ -18,6 +18,7 @@ public class NoteActivity extends BaseActivity {
     private EditText mPhoneEt;
     private EditText mPasswordEt;
     private Button mLoginBtn;
+    private Button mRegisterBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,11 +32,18 @@ public class NoteActivity extends BaseActivity {
         mPhoneEt = (EditText) findViewById(R.id.et_phone);
         mPasswordEt = (EditText) findViewById(R.id.et_password);
         mLoginBtn = (Button) findViewById(R.id.btn_login);
+        mRegisterBtn = (Button) findViewById(R.id.btn_register);
 
         mLoginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 login();
+            }
+        });
+        mRegisterBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                register();
             }
         });
     }
@@ -56,6 +64,36 @@ public class NoteActivity extends BaseActivity {
                     @Override
                     public void onFinish() {
                         mLoginBtn.setEnabled(true);
+                    }
+
+                    @Override
+                    public void onError(TaskError e) {
+                        Toaster.show(e.msg);
+                    }
+
+                    @Override
+                    public void onSuccess(String result) {
+                        Toaster.show(result);
+                    }
+                }));
+    }
+
+    private void register() {
+        String username = mPhoneEt.getText().toString().trim();
+        String password = mPasswordEt.getText().toString().trim();
+//        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+//            Toaster.show("手机号/密码为空");
+//            return;
+//        }
+        String passEncrypt = EncryptUtils.encryptPassword(password);
+        Logger.e("passEncrypt= " + passEncrypt);
+        mRegisterBtn.setEnabled(false);
+        mTaskManager.start(LoginTask.register(username, passEncrypt)
+                .setCallback(new TaskCallback<String>() {
+
+                    @Override
+                    public void onFinish() {
+                        mRegisterBtn.setEnabled(true);
                     }
 
                     @Override

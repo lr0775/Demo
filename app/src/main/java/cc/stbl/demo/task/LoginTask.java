@@ -37,4 +37,26 @@ public class LoginTask {
         };
     }
 
+    public static Task<String> register(final String phone, final String password) {
+        return new Task<String>() {
+            @Override
+            protected void call() {
+                JSONObject json = new JSONObject();
+                json.put("phone", phone);
+                json.put("password", password);
+                try {
+                    HttpResponse response = OkHttpHelper.getInstance().post(API.REGISTER, json);
+                    if (response.error != null) {
+                        onError(response.error);
+                        return;
+                    }
+                    onSuccess(response.result);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    onError(e);
+                }
+            }
+        };
+    }
+
 }
