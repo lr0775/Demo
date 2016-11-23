@@ -79,6 +79,7 @@ public class NoteActivity extends BaseActivity {
                     public void onSuccess(LoginInfo result) {
                         Toaster.show("登录成功");
                         SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, result.accessToken);
+                        SharedPrefUtils.putToPublicFile(KEY.REFRESH_TOKEN, result.refreshToken);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_UID, result.user.id);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);
@@ -114,6 +115,7 @@ public class NoteActivity extends BaseActivity {
                     public void onSuccess(LoginInfo result) {
                         Toaster.show("注册成功");
                         SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, result.accessToken);
+                        SharedPrefUtils.putToPublicFile(KEY.REFRESH_TOKEN, result.refreshToken);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_UID, result.user.id);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);

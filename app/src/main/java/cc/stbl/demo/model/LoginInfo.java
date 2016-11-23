@@ -7,6 +7,7 @@ package cc.stbl.demo.model;
 public class LoginInfo {
 
     public String accessToken;
+    public String refreshToken;
     public User user;
 
 }
