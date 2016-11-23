@@ -1,5 +1,6 @@
 package cc.stbl.demo.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -81,6 +82,7 @@ public class NoteActivity extends BaseActivity {
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_UID, result.user.id);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);
+                        startActivity(new Intent(mActivity, NoteListActivity.class));
                     }
                 }));
     }
@@ -115,6 +117,7 @@ public class NoteActivity extends BaseActivity {
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_UID, result.user.id);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);
+                        startActivity(new Intent(mActivity, NoteListActivity.class));
                     }
                 }));
     }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import cc.stbl.demo.constant.API;
+import cc.stbl.demo.constant.KEY;
 import cc.stbl.demo.model.ServerResult;
 import cc.stbl.demo.weapon.HttpResponse;
 import cc.stbl.demo.weapon.TaskError;
@@ -50,6 +51,8 @@ public class OkHttpHelper {
         }
         Request request = new Request.Builder()
                 .url(url)
+                .addHeader("x-access-token", (String) SharedPrefUtils.getFromPublicFile(KEY.ACCESS_TOKEN, ""))
+                .addHeader("User-Agent", "Android;" + (int) SharedPrefUtils.getFromPublicFile(KEY.LOGINED_UID, 0))
                 .build();
         Response response = mClient.newCall(request).execute();
         String res = response.body().string();
@@ -86,6 +89,8 @@ public class OkHttpHelper {
         RequestBody body = builder.build();
         Request request = new Request.Builder()
                 .url(url)
+                .addHeader("x-access-token", (String) SharedPrefUtils.getFromPublicFile(KEY.ACCESS_TOKEN, ""))
+                .addHeader("User-Agent", "Android;" + (int) SharedPrefUtils.getFromPublicFile(KEY.LOGINED_UID, 0))
                 .post(body)
                 .build();
         Response response = mClient.newCall(request).execute();

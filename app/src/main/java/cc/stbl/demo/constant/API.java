@@ -11,8 +11,10 @@ public class API {
     public static final String LOGIN = "/login";
     public static final String LOGOUT = "/logout";
     public static final String REGISTER = "/register";
+
+    public static final String NOTE = "/note";
+
     public static final String ABOUT = "/about";
-    public static final String NOTEPAD = "/notepad";
     public static final String NOTEPAD_CREATE = "/notepad/create";
     public static final String NOTEPAD_UPDATE = "/notepad/update";
     public static final String NOTEPAD_DELETE = "/notepad/delete";
