@@ -25,6 +25,7 @@
         <activity
             android:name=".activity.NoteActivity"
             android:windowSoftInputMode="stateVisible" />
+        <activity android:name=".activity.NoteListActivity" />
     </application>
 
 </manifest>

@@ -1,13 +1,12 @@
 package cc.stbl.demo.util;
 
-import android.text.TextUtils;
-
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.IOException;
 import java.util.Set;
 
 import cc.stbl.demo.constant.API;
+import cc.stbl.demo.model.ServerResult;
 import cc.stbl.demo.weapon.HttpResponse;
 import cc.stbl.demo.weapon.TaskError;
 import okhttp3.FormBody;
@@ -55,34 +54,14 @@ public class OkHttpHelper {
         Response response = mClient.newCall(request).execute();
         String res = response.body().string();
         Logger.e("url = " + url + ", response = " + res);
-        JSONObject obj = null;
-        try {
-            obj = JSONObject.parseObject(res);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Logger.e("url = " + url + ", response = " + res);
-            return new HttpResponse(new TaskError("数据返回错误"), "");
-        }
-
-        if (obj == null) {
-            return new HttpResponse(new TaskError("数据返回错误"), "");
-        }
-
+        ServerResult serverResult = com.alibaba.fastjson.JSON.parseObject(res, ServerResult.class);
         TaskError error = null;
-        JSONObject status = obj.getJSONObject("response_status");
-        if (status.containsKey("code") || TextUtils.isEmpty(status.getString("error"))) {
-            error = new TaskError();
-            if (status.containsKey("code")) {
-                error.code = status.getIntValue("code");
-            }
-            error.msg = status.getString("error");
+        if (serverResult.code != 0) {
+            error = new TaskError(serverResult.code, serverResult.msg);
         }
-
         String result = "";
         if (error == null) {
-            if (obj.containsKey("response_data")) {
-                result = obj.getString("response_data");
-            }
+            result = serverResult.data;
         }
         return new HttpResponse(error, result);
     }
@@ -113,8 +92,15 @@ public class OkHttpHelper {
         String res = response.body().string();
         Logger.e("url = " + url + ", response = " + res);
 
+        ServerResult serverResult = com.alibaba.fastjson.JSON.parseObject(res, ServerResult.class);
         TaskError error = null;
-        String result = res;
+        if (serverResult.code != 0) {
+            error = new TaskError(serverResult.code, serverResult.msg);
+        }
+        String result = "";
+        if (error == null) {
+            result = serverResult.data;
+        }
         return new HttpResponse(error, result);
     }
 

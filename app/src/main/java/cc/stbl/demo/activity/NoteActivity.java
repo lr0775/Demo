@@ -6,9 +6,12 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import cc.stbl.demo.R;
+import cc.stbl.demo.constant.KEY;
+import cc.stbl.demo.model.LoginInfo;
 import cc.stbl.demo.task.LoginTask;
 import cc.stbl.demo.util.EncryptUtils;
 import cc.stbl.demo.util.Logger;
+import cc.stbl.demo.util.SharedPrefUtils;
 import cc.stbl.demo.util.Toaster;
 import cc.stbl.demo.weapon.TaskCallback;
 import cc.stbl.demo.weapon.TaskError;
@@ -55,11 +58,11 @@ public class NoteActivity extends BaseActivity {
 //            Toaster.show("手机号/密码为空");
 //            return;
 //        }
-        String passEncrypt = EncryptUtils.encryptPassword(password);
+        final String passEncrypt = EncryptUtils.encryptPassword(password);
         Logger.e("passEncrypt= " + passEncrypt);
         mLoginBtn.setEnabled(false);
         mTaskManager.start(LoginTask.login(username, passEncrypt)
-                .setCallback(new TaskCallback<String>() {
+                .setCallback(new TaskCallback<LoginInfo>() {
 
                     @Override
                     public void onFinish() {
@@ -72,8 +75,12 @@ public class NoteActivity extends BaseActivity {
                     }
 
                     @Override
-                    public void onSuccess(String result) {
-                        Toaster.show(result);
+                    public void onSuccess(LoginInfo result) {
+                        Toaster.show("登录成功");
+                        SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, result.accessToken);
+                        SharedPrefUtils.putToPublicFile(KEY.LOGINED_UID, result.user.id);
+                        SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
+                        SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);
                     }
                 }));
     }
@@ -85,11 +92,11 @@ public class NoteActivity extends BaseActivity {
 //            Toaster.show("手机号/密码为空");
 //            return;
 //        }
-        String passEncrypt = EncryptUtils.encryptPassword(password);
+        final String passEncrypt = EncryptUtils.encryptPassword(password);
         Logger.e("passEncrypt= " + passEncrypt);
         mRegisterBtn.setEnabled(false);
         mTaskManager.start(LoginTask.register(username, passEncrypt)
-                .setCallback(new TaskCallback<String>() {
+                .setCallback(new TaskCallback<LoginInfo>() {
 
                     @Override
                     public void onFinish() {
@@ -102,8 +109,12 @@ public class NoteActivity extends BaseActivity {
                     }
 
                     @Override
-                    public void onSuccess(String result) {
-                        Toaster.show(result);
+                    public void onSuccess(LoginInfo result) {
+                        Toaster.show("注册成功");
+                        SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, result.accessToken);
+                        SharedPrefUtils.putToPublicFile(KEY.LOGINED_UID, result.user.id);
+                        SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
+                        SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);
                     }
                 }));
     }
