@@ -50,6 +50,9 @@ public class MainActivity extends BaseActivity {
                     case 2:
                         startActivity(new Intent(mActivity, NoteActivity.class));
                         break;
+                    case 3:
+                        startActivity(new Intent(mActivity, RefreshActivity.class));
+                        break;
                 }
             }
         });
@@ -59,5 +62,6 @@ public class MainActivity extends BaseActivity {
         mList.add("图库");
         mList.add("SampleSize");
         mList.add("Note");
+        mList.add("Refresh");
     }
 }
