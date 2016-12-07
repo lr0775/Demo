@@ -162,10 +162,14 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 Logger.e("onInterceptTouchEvent action pointer up");
+                onSecondPointerUp(ev);
+                mLastX = getMotionEventX(ev, mActivePointerId);
+                mLastY = getMotionEventY(ev, mActivePointerId);
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 Logger.e("onInterceptTouchEvent action up/cancel");
+                mActivePointerId = INVALID_POINTER;
                 break;
         }
         return super.onInterceptTouchEvent(ev);
@@ -209,6 +213,15 @@ public class RefreshLayout extends ViewGroup {
             return INVALID_COORDINATE;
         }
         return event.getY(pointerId);
+    }
+
+    private void onSecondPointerUp(MotionEvent ev) {
+        int pointerIndex = MotionEventCompat.getActionIndex(ev);
+        int pointerId = ev.getPointerId(pointerIndex);
+        if (pointerId == mActivePointerId) {
+            int newPointerIndex = (pointerIndex == 0 ? 1 : 0);
+            mActivePointerId = ev.getPointerId(newPointerIndex);
+        }
     }
 
     private boolean onCheckCanRefresh() {
