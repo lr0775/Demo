@@ -123,6 +123,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 Logger.e("dispatchTouchEvent action up/cancel");
+                mActivePointerId = INVALID_POINTER;
                 break;
         }
         return super.dispatchTouchEvent(ev);
@@ -160,43 +161,37 @@ public class RefreshLayout extends ViewGroup {
                     return true;
                 }
                 break;
-            case MotionEvent.ACTION_POINTER_UP:
-                Logger.e("onInterceptTouchEvent action pointer up");
-                onSecondPointerUp(ev);
-                mLastX = getMotionEventX(ev, mActivePointerId);
-                mLastY = getMotionEventY(ev, mActivePointerId);
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                Logger.e("onInterceptTouchEvent action up/cancel");
-                mActivePointerId = INVALID_POINTER;
-                break;
         }
         return super.onInterceptTouchEvent(ev);
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        int action = MotionEventCompat.getActionMasked(event);
+    public boolean onTouchEvent(MotionEvent ev) {
+        int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                Logger.e("onTouchEvent action down");
-                return true;
             case MotionEvent.ACTION_MOVE:
                 Logger.e("onTouchEvent action move");
+                float x = getMotionEventX(ev, mActivePointerId);
+                float y = getMotionEventY(ev, mActivePointerId);
+                float diffX = x - mLastX;
+                float diffY = y - mLastY;
+                mLastX = x;
+                mLastY = y;
                 return true;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Logger.e("onTouchEvent action pointer down");
+                onSecondPointerDown(ev);
+                mLastX = getMotionEventX(ev, mActivePointerId);
+                mLastY = getMotionEventY(ev, mActivePointerId);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 Logger.e("onTouchEvent action pointer up");
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                Logger.e("onTouchEvent action up/cancel");
+                onSecondPointerUp(ev);
+                mLastX = getMotionEventX(ev, mActivePointerId);
+                mLastY = getMotionEventY(ev, mActivePointerId);
                 break;
         }
-        return super.onTouchEvent(event);
+        return super.onTouchEvent(ev);
     }
 
     private float getMotionEventX(MotionEvent event, int pointerId) {
@@ -213,6 +208,14 @@ public class RefreshLayout extends ViewGroup {
             return INVALID_COORDINATE;
         }
         return event.getY(pointerId);
+    }
+
+    private void onSecondPointerDown(MotionEvent ev) {
+        int pointerIndex = MotionEventCompat.getActionIndex(ev);
+        int pointerId = ev.getPointerId(pointerIndex);
+        if (pointerId != INVALID_POINTER) {
+            mActivePointerId = pointerId;
+        }
     }
 
     private void onSecondPointerUp(MotionEvent ev) {
