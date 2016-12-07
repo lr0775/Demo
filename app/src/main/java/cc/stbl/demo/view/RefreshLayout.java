@@ -143,13 +143,10 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = x;
                 mLastY = y;
                 boolean moved = Math.abs(initDiffY) > mTouchSlop && Math.abs(initDiffY) > Math.abs(initDiffX);
-                boolean triggerCondition = moved && (onCheckCanRefresh() || onCheckCanLoadMore());
-                if (triggerCondition) {
-                    return true;
-                }
-                break;
+                boolean triggerCondition = moved && (initDiffY > 0 ? onCheckCanRefresh() : onCheckCanLoadMore());
+                return triggerCondition;
         }
-        return super.onInterceptTouchEvent(ev);
+        return false;
     }
 
     @Override
