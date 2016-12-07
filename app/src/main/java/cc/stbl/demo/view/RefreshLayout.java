@@ -2,6 +2,7 @@ package cc.stbl.demo.view;
 
 import android.content.Context;
 import android.support.v4.view.MotionEventCompat;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,6 +18,12 @@ import cc.stbl.demo.util.Logger;
 
 public class RefreshLayout extends ViewGroup {
 
+    private static final int INVALID_COORDINATE = -1;
+    private static final int INVALID_POINTER = -1;
+
+    private boolean mRefreshEnabled = true;
+    private boolean mLoadMoreEnabled = true;
+
     private int mTouchSlop;
 
     private View mHeaderView;
@@ -30,6 +37,12 @@ public class RefreshLayout extends ViewGroup {
     private int mTargetHeight;
     private int mFooterWidth;
     private int mFooterHeight;
+
+    private int mActivePointerId;
+    private float mInitDownX;
+    private float mInitDownY;
+    private float mLastX;
+    private float mLastY;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -121,9 +134,31 @@ public class RefreshLayout extends ViewGroup {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 Logger.e("onInterceptTouchEvent action down");
+                mActivePointerId = ev.getPointerId(0);
+                mInitDownX = getMotionEventX(ev, mActivePointerId);
+                mInitDownY = getMotionEventY(ev, mActivePointerId);
+                if (mInitDownX == INVALID_COORDINATE || mInitDownY == INVALID_COORDINATE) {
+                    return false;
+                }
+                mLastX = mInitDownX;
+                mLastY = mInitDownY;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Logger.e("onInterceptTouchEvent action move");
+                if (mActivePointerId == INVALID_POINTER) {
+                    return false;
+                }
+                float x = getMotionEventX(ev, mActivePointerId);
+                float y = getMotionEventY(ev, mActivePointerId);
+                float initDiffX = x - mInitDownX;
+                float initDiffY = y - mInitDownY;
+                mLastX = x;
+                mLastY = y;
+                boolean moved = Math.abs(initDiffY) > mTouchSlop && Math.abs(initDiffY) > Math.abs(initDiffX);
+                boolean triggerCondition = moved && (onCheckCanRefresh() || onCheckCanLoadMore());
+                if (triggerCondition) {
+                    return true;
+                }
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 Logger.e("onInterceptTouchEvent action pointer up");
@@ -158,5 +193,29 @@ public class RefreshLayout extends ViewGroup {
                 break;
         }
         return super.onTouchEvent(event);
+    }
+
+    private float getMotionEventX(MotionEvent event, int pointerId) {
+        int index = event.findPointerIndex(pointerId);
+        if (index < 0) {
+            return INVALID_COORDINATE;
+        }
+        return event.getX(pointerId);
+    }
+
+    private float getMotionEventY(MotionEvent event, int pointerId) {
+        int index = event.findPointerIndex(pointerId);
+        if (index < 0) {
+            return INVALID_COORDINATE;
+        }
+        return event.getY(pointerId);
+    }
+
+    private boolean onCheckCanRefresh() {
+        return mRefreshEnabled && !ViewCompat.canScrollVertically(mTargetView, -1);
+    }
+
+    private boolean onCheckCanLoadMore() {
+        return mLoadMoreEnabled && !ViewCompat.canScrollVertically(mTargetView, 1);
     }
 }
