@@ -117,19 +117,6 @@ public class RefreshLayout extends ViewGroup {
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        int action = MotionEventCompat.getActionMasked(ev);
-        switch (action) {
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:
-                Logger.e("dispatchTouchEvent action up/cancel");
-                mActivePointerId = INVALID_POINTER;
-                break;
-        }
-        return super.dispatchTouchEvent(ev);
-    }
-
-    @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
@@ -189,6 +176,10 @@ public class RefreshLayout extends ViewGroup {
                 onSecondPointerUp(ev);
                 mLastX = getMotionEventX(ev, mActivePointerId);
                 mLastY = getMotionEventY(ev, mActivePointerId);
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                mActivePointerId = INVALID_POINTER;
                 break;
         }
         return super.onTouchEvent(ev);
