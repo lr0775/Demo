@@ -4,10 +4,34 @@
     android:id="@+id/activity_refresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="cc.stbl.demo.activity.RefreshActivity">
+
+    <cc.stbl.demo.view.RefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <cc.stbl.demo.view.refresh.SwipeRefreshHeaderLayout
+            android:id="@id/swipe_refresh_header"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="#00ff00">
+
+        </cc.stbl.demo.view.refresh.SwipeRefreshHeaderLayout>
+
+        <TextView
+            android:id="@id/swipe_target"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#ff0000" />
+
+        <cc.stbl.demo.view.refresh.SwipeLoadMoreFooterLayout
+            android:id="@id/swipe_load_more_footer"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="#00ffff">
+
+        </cc.stbl.demo.view.refresh.SwipeLoadMoreFooterLayout>
+
+    </cc.stbl.demo.view.RefreshLayout>
 
 </RelativeLayout>
