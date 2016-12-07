@@ -67,13 +67,23 @@ public class RefreshLayout extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (mTargetView == null) {
+            return;
+        }
         mLayoutHeight = getMeasuredHeight();
-        mHeaderWidth = mHeaderView.getMeasuredWidth();
-        mHeaderHeight = mHeaderView.getMeasuredHeight();
+        if (mHeaderView != null) {
+            measureChild(mHeaderView, widthMeasureSpec, heightMeasureSpec);
+            mHeaderWidth = mHeaderView.getMeasuredWidth();
+            mHeaderHeight = mHeaderView.getMeasuredHeight();
+        }
+        measureChild(mTargetView, widthMeasureSpec, heightMeasureSpec);
         mTargetWidth = mTargetView.getMeasuredWidth();
         mTargetHeight = mTargetView.getMeasuredHeight();
-        mFooterWidth = mFooterView.getMeasuredWidth();
-        mFooterHeight = mFooterView.getMeasuredHeight();
+        if (mFooterView != null) {
+            measureChild(mFooterView, widthMeasureSpec, heightMeasureSpec);
+            mFooterWidth = mFooterView.getMeasuredWidth();
+            mFooterHeight = mFooterView.getMeasuredHeight();
+        }
     }
 
     @Override
