@@ -18,6 +18,18 @@ import cc.stbl.demo.util.Logger;
 
 public class RefreshLayout extends ViewGroup {
 
+    private static final int STATUS_REFRESH_RETURNING = 5;
+    private static final int STATUS_REFRESH_COMPLETE = 4;
+    private static final int STATUS_REFRESH_REFRESHING = 3;
+    private static final int STATUS_REFRESH_RELEASE = 2;
+    private static final int STATUS_REFRESH_SWIPING = 1;
+    private static final int STATUS_DEFAULT = 0;
+    private static final int STATUS_LOAD_MORE_SWIPING = -1;
+    private static final int STATUS_LOAD_MORE_RELEASE = -2;
+    private static final int STATUS_LOAD_MORE_LOADING = -3;
+    private static final int STATUS_LOAD_MORE_COMPLETE = -4;
+    private static final int STATUS_LOAD_MORE_RETURNING = -5;
+
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
@@ -240,4 +252,6 @@ public class RefreshLayout extends ViewGroup {
         mHeaderView.offsetTopAndBottom((int) diffY);
         mTargetView.offsetTopAndBottom((int) diffY);
     }
+
+
 }
