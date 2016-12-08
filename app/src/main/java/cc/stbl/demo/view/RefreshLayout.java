@@ -259,6 +259,7 @@ public class RefreshLayout extends ViewGroup {
         diffY = diffY * 0.5f;
         mHeaderView.offsetTopAndBottom((int) diffY);
         mTargetView.offsetTopAndBottom((int) diffY);
+        mFooterView.offsetTopAndBottom((int) diffY);
     }
 
 
