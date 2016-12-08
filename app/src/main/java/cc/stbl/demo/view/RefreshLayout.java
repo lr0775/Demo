@@ -144,9 +144,11 @@ public class RefreshLayout extends ViewGroup {
                 mLastY = y;
                 boolean moved = Math.abs(initDiffY) > mTouchSlop && Math.abs(initDiffY) > Math.abs(initDiffX);
                 boolean triggerCondition = moved && (initDiffY > 0 ? onCheckCanRefresh() : onCheckCanLoadMore());
-                return triggerCondition;
+                if (triggerCondition) {
+                    return true;
+                }
         }
-        return false;
+        return super.onInterceptTouchEvent(ev);
     }
 
     @Override
@@ -161,6 +163,16 @@ public class RefreshLayout extends ViewGroup {
                 float diffY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
+                if (diffY > 0 && onCheckCanRefresh()) {
+                    if (mHeaderView != null && mHeaderView.getVisibility() != VISIBLE) {
+                        mHeaderView.setVisibility(VISIBLE);
+                    }
+                } else if (diffY < 0 && onCheckCanLoadMore()) {
+                    if (mFooterView != null && mFooterView.getVisibility() != VISIBLE) {
+                        mFooterView.setVisibility(VISIBLE);
+                    }
+                }
+                updateScroll(diffY);
                 return true;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Logger.e("onTouchEvent action pointer down");
@@ -221,5 +233,11 @@ public class RefreshLayout extends ViewGroup {
 
     private boolean onCheckCanLoadMore() {
         return mLoadMoreEnabled && !ViewCompat.canScrollVertically(mTargetView, 1);
+    }
+
+    private void updateScroll(float diffY) {
+        diffY = diffY * 0.5f;
+        mHeaderView.offsetTopAndBottom((int) diffY);
+        mTargetView.offsetTopAndBottom((int) diffY);
     }
 }
