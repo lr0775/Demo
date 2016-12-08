@@ -30,6 +30,8 @@ public class RefreshLayout extends ViewGroup {
     private static final int STATUS_LOAD_MORE_COMPLETE = -4;
     private static final int STATUS_LOAD_MORE_RETURNING = -5;
 
+    private int mStatus;
+
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
@@ -155,9 +157,24 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = x;
                 mLastY = y;
                 boolean moved = Math.abs(initDiffY) > mTouchSlop && Math.abs(initDiffY) > Math.abs(initDiffX);
-                boolean triggerCondition = moved && (initDiffY > 0 ? onCheckCanRefresh() : onCheckCanLoadMore());
-                if (triggerCondition) {
-                    return true;
+                if (moved) {
+                    if (initDiffY > 0) {
+                        if (onCheckCanRefresh()) {
+                            mStatus = STATUS_REFRESH_SWIPING;
+                            if (mHeaderView != null && mHeaderView.getVisibility() != VISIBLE) {
+                                mHeaderView.setVisibility(VISIBLE);
+                            }
+                            return true;
+                        }
+                    } else {
+                        if (onCheckCanLoadMore()) {
+                            mStatus = STATUS_LOAD_MORE_SWIPING;
+                            if (mFooterView != null && mFooterView.getVisibility() != VISIBLE) {
+                                mFooterView.setVisibility(VISIBLE);
+                            }
+                            return true;
+                        }
+                    }
                 }
         }
         return super.onInterceptTouchEvent(ev);
@@ -175,15 +192,6 @@ public class RefreshLayout extends ViewGroup {
                 float diffY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (diffY > 0 && onCheckCanRefresh()) {
-                    if (mHeaderView != null && mHeaderView.getVisibility() != VISIBLE) {
-                        mHeaderView.setVisibility(VISIBLE);
-                    }
-                } else if (diffY < 0 && onCheckCanLoadMore()) {
-                    if (mFooterView != null && mFooterView.getVisibility() != VISIBLE) {
-                        mFooterView.setVisibility(VISIBLE);
-                    }
-                }
                 updateScroll(diffY);
                 return true;
             case MotionEvent.ACTION_POINTER_DOWN:
