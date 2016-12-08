@@ -199,7 +199,7 @@ public class RefreshLayout extends ViewGroup {
         if (index < 0) {
             return INVALID_COORDINATE;
         }
-        return event.getX(pointerId);
+        return event.getX(index);
     }
 
     private float getMotionEventY(MotionEvent event, int pointerId) {
@@ -207,7 +207,7 @@ public class RefreshLayout extends ViewGroup {
         if (index < 0) {
             return INVALID_COORDINATE;
         }
-        return event.getY(pointerId);
+        return event.getY(index);
     }
 
     private void onSecondPointerDown(MotionEvent ev) {
