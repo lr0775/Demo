@@ -88,15 +88,6 @@ public class RefreshLayout extends ViewGroup {
         mHeaderView = findViewById(R.id.swipe_refresh_header);
         mTargetView = findViewById(R.id.swipe_target);
         mFooterView = findViewById(R.id.swipe_load_more_footer);
-        if (mTargetView == null) {
-            return;
-        }
-        if (mHeaderView != null) {
-            mHeaderView.setVisibility(GONE);
-        }
-        if (mFooterView != null) {
-            mFooterView.setVisibility(GONE);
-        }
     }
 
     @Override
@@ -168,17 +159,11 @@ public class RefreshLayout extends ViewGroup {
                     if (initDiffY > 0) {
                         if (onCheckCanRefresh()) {
                             mStatus = STATUS_REFRESH_SWIPING;
-                            if (mHeaderView != null && mHeaderView.getVisibility() != VISIBLE) {
-                                mHeaderView.setVisibility(VISIBLE);
-                            }
                             return true;
                         }
                     } else {
                         if (onCheckCanLoadMore()) {
                             mStatus = STATUS_LOAD_MORE_SWIPING;
-                            if (mFooterView != null && mFooterView.getVisibility() != VISIBLE) {
-                                mFooterView.setVisibility(VISIBLE);
-                            }
                             return true;
                         }
                     }
