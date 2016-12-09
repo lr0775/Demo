@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.widget.Scroller;
 
 import cc.stbl.demo.R;
 import cc.stbl.demo.util.Logger;
@@ -57,6 +58,10 @@ public class RefreshLayout extends ViewGroup {
     private float mInitDownY;
     private float mLastX;
     private float mLastY;
+    private int mDiffY;
+
+    private Scroller mScroller;
+    private int mScrollLastY;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -70,7 +75,7 @@ public class RefreshLayout extends ViewGroup {
         super(context, attrs, defStyleAttr);
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-
+        mScroller = new Scroller(context);
     }
 
     @Override
@@ -209,6 +214,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
+                onActivePointerUp();
                 break;
         }
         return super.onTouchEvent(ev);
@@ -255,11 +261,43 @@ public class RefreshLayout extends ViewGroup {
         return mLoadMoreEnabled && !ViewCompat.canScrollVertically(mTargetView, 1);
     }
 
+    private void onActivePointerUp() {
+        if (mStatus > 0) {
+            mScroller.startScroll(0, -mDiffY, 0, 0);
+        } else if (mStatus < 0) {
+
+        }
+        invalidate();
+    }
+
+    @Override
+    public void computeScroll() {
+        super.computeScroll();
+        if (!mScroller.computeScrollOffset()) {
+            mDiffY = 0;
+            mScrollLastY = 0;
+            return;
+        }
+        int currY = mScroller.getCurrY();
+        int diffY = currY - mScrollLastY;
+        mScrollLastY = currY;
+        if (mStatus > 0) {
+            mHeaderView.offsetTopAndBottom(diffY);
+        } else if (mStatus < 0) {
+            mFooterView.offsetTopAndBottom(diffY);
+        }
+        mTargetView.offsetTopAndBottom(diffY);
+    }
+
     private void updateScroll(float diffY) {
-        diffY = diffY * 0.5f;
-        mHeaderView.offsetTopAndBottom((int) diffY);
-        mTargetView.offsetTopAndBottom((int) diffY);
-        mFooterView.offsetTopAndBottom((int) diffY);
+        int dy = (int) (diffY * 0.5f);
+        mDiffY += dy;
+        if (mStatus > 0) {
+            mHeaderView.offsetTopAndBottom(dy);
+        } else if (mStatus < 0) {
+            mFooterView.offsetTopAndBottom(dy);
+        }
+        mTargetView.offsetTopAndBottom(dy);
     }
 
 
