@@ -19,25 +19,13 @@ import cc.stbl.demo.util.Logger;
 
 public class RefreshLayout extends ViewGroup {
 
-    private static final int STATUS_REFRESH_RETURNING = 5;
-    private static final int STATUS_REFRESH_COMPLETE = 4;
-    private static final int STATUS_REFRESH_REFRESHING = 3;
-    private static final int STATUS_REFRESH_RELEASE = 2;
-    private static final int STATUS_REFRESH_SWIPING = 1;
-    private static final int STATUS_DEFAULT = 0;
-    private static final int STATUS_LOAD_MORE_SWIPING = -1;
-    private static final int STATUS_LOAD_MORE_RELEASE = -2;
-    private static final int STATUS_LOAD_MORE_LOADING = -3;
-    private static final int STATUS_LOAD_MORE_COMPLETE = -4;
-    private static final int STATUS_LOAD_MORE_RETURNING = -5;
-
-    private int mStatus;
-
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
+
+    private int mStatus;
 
     private int mTouchSlop;
 
@@ -158,12 +146,12 @@ public class RefreshLayout extends ViewGroup {
                 if (moved) {
                     if (initDiffY > 0) {
                         if (onCheckCanRefresh()) {
-                            mStatus = STATUS_REFRESH_SWIPING;
+                            mStatus = 1;
                             return true;
                         }
                     } else {
                         if (onCheckCanLoadMore()) {
-                            mStatus = STATUS_LOAD_MORE_SWIPING;
+                            mStatus = -1;
                             return true;
                         }
                     }
@@ -275,7 +263,7 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void updateScroll(float diffY) {
-        float ratio = 0.5f * (-0.001f * mDiffY + 1);
+        float ratio = 0.5f * (-0.001f * Math.abs(mDiffY) + 1);
         int dy = (int) (diffY * ratio);
         mDiffY += dy;
         if (mStatus > 0) {

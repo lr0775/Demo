@@ -26,7 +26,9 @@
             android:name=".activity.NoteActivity"
             android:windowSoftInputMode="stateVisible" />
         <activity android:name=".activity.NoteListActivity" />
-        <activity android:name=".activity.RefreshActivity"/>
+        <activity
+            android:name=".activity.RefreshActivity"
+            android:theme="@style/NoActionBar" />
     </application>
 
 </manifest>
