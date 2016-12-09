@@ -149,6 +149,8 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mInitDownX;
                 mLastY = mInitDownY;
+                mDiffY = 0;
+                mScrollLastY = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Logger.e("onInterceptTouchEvent action move");
@@ -274,8 +276,6 @@ public class RefreshLayout extends ViewGroup {
     public void computeScroll() {
         super.computeScroll();
         if (!mScroller.computeScrollOffset()) {
-            mDiffY = 0;
-            mScrollLastY = 0;
             return;
         }
         int currY = mScroller.getCurrY();
