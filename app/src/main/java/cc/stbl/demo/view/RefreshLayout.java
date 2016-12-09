@@ -290,7 +290,8 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void updateScroll(float diffY) {
-        int dy = (int) (diffY * 0.5f);
+        float ratio = 0.5f * (-0.001f * mDiffY + 1);
+        int dy = (int) (diffY * ratio);
         mDiffY += dy;
         if (mStatus > 0) {
             mHeaderView.offsetTopAndBottom(dy);
