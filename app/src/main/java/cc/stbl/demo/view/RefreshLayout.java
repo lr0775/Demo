@@ -48,6 +48,7 @@ public class RefreshLayout extends ViewGroup {
     private float mLastY;
 
     private Scroller mScroller;
+    private int mScrollLastY;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -168,7 +169,10 @@ public class RefreshLayout extends ViewGroup {
                 float diffY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                updateScroll(diffY);
+                int top = mTargetView.getTop();
+                float ratio = 0.5f * (-0.0005f * Math.abs(top) + 1);
+                int offset = (int) (diffY * ratio);
+                updateScroll(offset);
                 return true;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Logger.e("onTouchEvent action pointer down");
@@ -235,7 +239,8 @@ public class RefreshLayout extends ViewGroup {
     private void onActivePointerUp() {
         int top = mTargetView.getTop();
         Logger.e("top = " + top);
-        mScroller.startScroll(0, -top, 0, Math.abs(top));
+        mScrollLastY = 0;
+        mScroller.startScroll(0, 0, 0, -top);
         invalidate();
     }
 
@@ -246,27 +251,19 @@ public class RefreshLayout extends ViewGroup {
             return;
         }
         int currY = mScroller.getCurrY();
-        Logger.e("currY = " + currY);
-        int diffY = -(currY + mTargetView.getTop());
-        if (mStatus > 0) {
-            mHeaderView.offsetTopAndBottom(diffY);
-        } else if (mStatus < 0) {
-            mFooterView.offsetTopAndBottom(diffY);
-        }
-        mTargetView.offsetTopAndBottom(diffY);
-        invalidate();
+        Logger.e("currY = " + currY + ", top = " + mTargetView.getTop());
+        int offset = currY - mScrollLastY;
+        mScrollLastY = currY;
+        updateScroll(offset);
     }
 
-    private void updateScroll(float diffY) {
-        int top = mTargetView.getTop();
-        float ratio = 0.5f * (-0.0005f * Math.abs(top) + 1);
-        int dy = (int) (diffY * ratio);
+    private void updateScroll(int offset) {
         if (mStatus > 0) {
-            mHeaderView.offsetTopAndBottom(dy);
+            mHeaderView.offsetTopAndBottom(offset);
         } else if (mStatus < 0) {
-            mFooterView.offsetTopAndBottom(dy);
+            mFooterView.offsetTopAndBottom(offset);
         }
-        mTargetView.offsetTopAndBottom(dy);
+        mTargetView.offsetTopAndBottom(offset);
         invalidate();
     }
 
