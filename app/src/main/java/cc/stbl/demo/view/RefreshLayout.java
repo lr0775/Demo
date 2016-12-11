@@ -46,10 +46,8 @@ public class RefreshLayout extends ViewGroup {
     private float mInitDownY;
     private float mLastX;
     private float mLastY;
-    private int mDiffY;
 
     private Scroller mScroller;
-    private int mScrollLastY;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -128,8 +126,6 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mInitDownX;
                 mLastY = mInitDownY;
-                mDiffY = 0;
-                mScrollLastY = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Logger.e("onInterceptTouchEvent action move");
@@ -237,11 +233,9 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void onActivePointerUp() {
-        if (mStatus > 0) {
-            mScroller.startScroll(0, -mDiffY, 0, 0);
-        } else if (mStatus < 0) {
-
-        }
+        int top = mTargetView.getTop();
+        Logger.e("top = " + top);
+        mScroller.startScroll(0, -top, 0, Math.abs(top));
         invalidate();
     }
 
@@ -252,20 +246,21 @@ public class RefreshLayout extends ViewGroup {
             return;
         }
         int currY = mScroller.getCurrY();
-        int diffY = currY - mScrollLastY;
-        mScrollLastY = currY;
+        Logger.e("currY = " + currY);
+        int diffY = -(currY + mTargetView.getTop());
         if (mStatus > 0) {
             mHeaderView.offsetTopAndBottom(diffY);
         } else if (mStatus < 0) {
             mFooterView.offsetTopAndBottom(diffY);
         }
         mTargetView.offsetTopAndBottom(diffY);
+        invalidate();
     }
 
     private void updateScroll(float diffY) {
-        float ratio = 0.5f * (-0.001f * Math.abs(mDiffY) + 1);
+        int top = mTargetView.getTop();
+        float ratio = 0.5f * (-0.001f * Math.abs(top) + 1);
         int dy = (int) (diffY * ratio);
-        mDiffY += dy;
         if (mStatus > 0) {
             mHeaderView.offsetTopAndBottom(dy);
         } else if (mStatus < 0) {
@@ -273,6 +268,5 @@ public class RefreshLayout extends ViewGroup {
         }
         mTargetView.offsetTopAndBottom(dy);
     }
-
 
 }

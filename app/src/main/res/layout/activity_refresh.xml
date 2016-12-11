@@ -30,17 +30,17 @@
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="300dp"
                     android:background="#ff0000" />
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="300dp"
                     android:background="#ff00ff" />
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="300dp"
                     android:background="#ffff00" />
 
             </LinearLayout>
