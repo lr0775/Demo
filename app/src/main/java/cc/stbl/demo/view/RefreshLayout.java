@@ -130,9 +130,6 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_MOVE:
                 Logger.e("onInterceptTouchEvent action move");
-                if (mActivePointerId == INVALID_POINTER) {
-                    return false;
-                }
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float initDiffX = x - mInitDownX;
@@ -153,6 +150,7 @@ public class RefreshLayout extends ViewGroup {
                         }
                     }
                 }
+                break;
         }
         return super.onInterceptTouchEvent(ev);
     }
