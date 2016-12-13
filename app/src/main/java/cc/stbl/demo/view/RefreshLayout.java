@@ -45,8 +45,6 @@ public class RefreshLayout extends ViewGroup {
     private int mFooterHeight;
 
     private int mActivePointerId;
-    private float mInitDownX;
-    private float mInitDownY;
     private float mLastX;
     private float mLastY;
 
@@ -117,31 +115,32 @@ public class RefreshLayout extends ViewGroup {
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
+    public boolean dispatchTouchEvent(MotionEvent ev) {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                Logger.e("onInterceptTouchEvent action down");
+            case MotionEvent.ACTION_DOWN: {
+                Logger.e("action down");
                 mActivePointerId = ev.getPointerId(0);
-                mInitDownX = getMotionEventX(ev, mActivePointerId);
-                mInitDownY = getMotionEventY(ev, mActivePointerId);
-                if (mInitDownX == INVALID_COORDINATE || mInitDownY == INVALID_COORDINATE) {
-                    return false;
-                }
-                mLastX = mInitDownX;
-                mLastY = mInitDownY;
-                break;
-            case MotionEvent.ACTION_MOVE:
-                Logger.e("onInterceptTouchEvent action move");
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
-                float initDiffX = x - mInitDownX;
-                float initDiffY = y - mInitDownY;
+                if (x == INVALID_COORDINATE || y == INVALID_COORDINATE) {
+                    return false;
+                }
                 mLastX = x;
                 mLastY = y;
-                boolean moved = Math.abs(initDiffY) > mTouchSlop && Math.abs(initDiffY) > Math.abs(initDiffX);
+            }
+            break;
+            case MotionEvent.ACTION_MOVE: {
+                Logger.e("action move");
+                float x = getMotionEventX(ev, mActivePointerId);
+                float y = getMotionEventY(ev, mActivePointerId);
+                float diffX = x - mLastX;
+                float diffY = y - mLastY;
+                mLastX = x;
+                mLastY = y;
+                boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
                 if (moved) {
-                    if (initDiffY > 0) {
+                    if (diffY > 0) {
                         if (onCheckCanRefresh()) {
                             mStatus = 1;
                             return true;
@@ -153,28 +152,8 @@ public class RefreshLayout extends ViewGroup {
                         }
                     }
                 }
-                break;
-        }
-        return super.onInterceptTouchEvent(ev);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        int action = MotionEventCompat.getActionMasked(ev);
-        switch (action) {
-            case MotionEvent.ACTION_MOVE:
-                Logger.e("onTouchEvent action move");
-                float x = getMotionEventX(ev, mActivePointerId);
-                float y = getMotionEventY(ev, mActivePointerId);
-                float diffX = x - mLastX;
-                float diffY = y - mLastY;
-                mLastX = x;
-                mLastY = y;
-                int top = mTargetView.getTop();
-                float ratio = -0.001f * Math.abs(top) + 1;
-                int offset = (int) (diffY * ratio);
-                updateScroll(offset);
-                return true;
+            }
+            break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Logger.e("onTouchEvent action pointer down");
                 onSecondPointerDown(ev);
@@ -193,7 +172,14 @@ public class RefreshLayout extends ViewGroup {
                 onActivePointerUp();
                 break;
         }
-        return super.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void fingerScroll(float diffY) {
+        int top = mTargetView.getTop();
+        float ratio = -0.001f * Math.abs(top) + 1;
+        int offset = (int) (diffY * ratio);
+        updateScroll(offset);
     }
 
     private float getMotionEventX(MotionEvent event, int pointerId) {
