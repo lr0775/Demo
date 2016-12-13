@@ -32,6 +32,9 @@
         <activity
             android:name=".activity.SwipeActivity"
             android:theme="@style/NoActionBar" />
+        <activity
+            android:name=".activity.UltraPullActivity"
+            android:theme="@style/NoActionBar" />
     </application>
 
 </manifest>
