@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cc.stbl.demo.view.refresh.SwipeToLoadLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_swipe"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="cc.stbl.demo.activity.SwipeActivity">
+
+    <cc.stbl.demo.view.refresh.SwipeRefreshHeaderLayout
+        android:id="@id/swipe_refresh_header"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#00ff00">
+
+    </cc.stbl.demo.view.refresh.SwipeRefreshHeaderLayout>
+
+    <ScrollView
+        android:id="@id/swipe_target"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#ff0000" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#ff00ff" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:background="#ffff00" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <cc.stbl.demo.view.refresh.SwipeLoadMoreFooterLayout
+        android:id="@id/swipe_load_more_footer"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#00ffff">
+
+    </cc.stbl.demo.view.refresh.SwipeLoadMoreFooterLayout>
+
+</cc.stbl.demo.view.refresh.SwipeToLoadLayout>

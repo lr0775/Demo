@@ -53,6 +53,9 @@ public class MainActivity extends BaseActivity {
                     case 3:
                         startActivity(new Intent(mActivity, RefreshActivity.class));
                         break;
+                    case 4:
+                        startActivity(new Intent(mActivity, SwipeActivity.class));
+                        break;
                 }
             }
         });
@@ -63,5 +66,6 @@ public class MainActivity extends BaseActivity {
         mList.add("SampleSize");
         mList.add("Note");
         mList.add("Refresh");
+        mList.add("Swipe");
     }
 }
