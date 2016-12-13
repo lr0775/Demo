@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
@@ -62,7 +63,7 @@ public class RefreshLayout extends ViewGroup {
         super(context, attrs, defStyleAttr);
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        mScroller = new Scroller(context);
+        mScroller = new Scroller(context, new DecelerateInterpolator());
     }
 
     @Override
@@ -168,7 +169,7 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = x;
                 mLastY = y;
                 int top = mTargetView.getTop();
-                float ratio = 0.5f * (-0.0005f * Math.abs(top) + 1);
+                float ratio = -0.001f * Math.abs(top) + 1;
                 int offset = (int) (diffY * ratio);
                 updateScroll(offset);
                 return true;
@@ -238,7 +239,7 @@ public class RefreshLayout extends ViewGroup {
         int top = mTargetView.getTop();
         Logger.e("top = " + top);
         mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, -top);
+        mScroller.startScroll(0, 0, 0, -top, 500);
         invalidate();
     }
 
