@@ -25,7 +25,7 @@ public class UltraPullActivity extends AppCompatActivity {
                     public void run() {
                         mPtrLayout.refreshComplete();
                     }
-                }, 1800);
+                }, 500);
             }
         });
     }
