@@ -239,7 +239,7 @@ public class RefreshLayout extends ViewGroup {
         int top = mTargetView.getTop();
         Logger.e("top = " + top);
         mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, -top, 500);
+        mScroller.startScroll(0, 0, 0, -top, 300);
         invalidate();
     }
 
