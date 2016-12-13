@@ -16,6 +16,8 @@ import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
+ * 用onInterceptTouchEvent在targetView是ScrollView时，会有问题，要设置ScrollView的android:overScrollMode="never"才行,
+ * SwipeToLoadLayout也有这个问题，PtrFrameLayout没有这个问题。
  */
 
 public class RefreshLayout extends ViewGroup {
