@@ -212,7 +212,6 @@ public class RefreshLayout extends ViewGroup {
             }
         }
         updateScroll(offset);
-        Logger.e("top begin = " + top + ", offset = " + offset + ", end = " + mTargetView.getTop());
         return true;
     }
 
