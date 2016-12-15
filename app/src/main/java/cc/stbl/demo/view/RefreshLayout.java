@@ -45,6 +45,8 @@ public class RefreshLayout extends ViewGroup {
     private int mFooterHeight;
 
     private int mActivePointerId;
+    private float mFirstX;
+    private float mFirstY;
     private float mLastX;
     private float mLastY;
 
@@ -121,21 +123,23 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_DOWN: {
                 Logger.e("action down");
                 mActivePointerId = ev.getPointerId(0);
-                float x = getMotionEventX(ev, mActivePointerId);
-                float y = getMotionEventY(ev, mActivePointerId);
-                if (x == INVALID_COORDINATE || y == INVALID_COORDINATE) {
+                mFirstX = getMotionEventX(ev, mActivePointerId);
+                mFirstY = getMotionEventY(ev, mActivePointerId);
+                if (mFirstX == INVALID_COORDINATE || mFirstY == INVALID_COORDINATE) {
                     return false;
                 }
-                mLastX = x;
-                mLastY = y;
+                mLastX = mFirstX;
+                mLastY = mFirstY;
             }
             break;
             case MotionEvent.ACTION_MOVE: {
                 Logger.e("action move");
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
-                float diffX = x - mLastX;
-                float diffY = y - mLastY;
+                float diffX = x - mFirstX;
+                float diffY = y - mFirstY;
+                float offsetX = x - mLastX;
+                float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
                 boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
@@ -143,11 +147,13 @@ public class RefreshLayout extends ViewGroup {
                     if (diffY > 0) {
                         if (onCheckCanRefresh()) {
                             mStatus = 1;
+                            fingerScroll(offsetY);
                             return true;
                         }
                     } else {
                         if (onCheckCanLoadMore()) {
                             mStatus = -1;
+                            fingerScroll(offsetY);
                             return true;
                         }
                     }
