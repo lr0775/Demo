@@ -148,19 +148,22 @@ public class RefreshLayout extends ViewGroup {
                 if (!mIntercepted) {
                     boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
                     if (moved) {
-                        if (diffY > 0) {
+                        if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mIntercepted = true;
+                                mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mIntercepted = true;
+                                mAttached = false;
                             }
                         }
                     }
-                } else {
+                }
+                if (mIntercepted) {
                     fingerScroll(offsetY, ev);
                 }
             }
@@ -189,6 +192,7 @@ public class RefreshLayout extends ViewGroup {
 
     private boolean fingerScroll(float diffY, MotionEvent ev) {
         if (mAttached) {
+            mIntercepted = false;
             return super.dispatchTouchEvent(ev);
         }
         int top = mTargetView.getTop();
