@@ -164,7 +164,7 @@ public class RefreshLayout extends ViewGroup {
                     }
                 }
                 if (mIntercepted) {
-                    fingerScroll(offsetY, ev);
+                    return fingerScroll(offsetY, ev);
                 }
             }
             break;
