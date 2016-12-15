@@ -49,6 +49,8 @@ public class RefreshLayout extends ViewGroup {
     private float mFirstY;
     private float mLastX;
     private float mLastY;
+    private boolean mIntercepted;
+    private boolean mAttached;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -130,6 +132,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
+                mIntercepted = false;
             }
             break;
             case MotionEvent.ACTION_MOVE: {
@@ -142,21 +145,23 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
-                if (moved) {
-                    if (diffY > 0) {
-                        if (onCheckCanRefresh()) {
-                            mStatus = 1;
-                            fingerScroll(offsetY);
-                            return true;
-                        }
-                    } else {
-                        if (onCheckCanLoadMore()) {
-                            mStatus = -1;
-                            fingerScroll(offsetY);
-                            return true;
+                if (!mIntercepted) {
+                    boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
+                    if (moved) {
+                        if (diffY > 0) {
+                            if (onCheckCanRefresh()) {
+                                mStatus = 1;
+                                mIntercepted = true;
+                            }
+                        } else {
+                            if (onCheckCanLoadMore()) {
+                                mStatus = -1;
+                                mIntercepted = true;
+                            }
                         }
                     }
+                } else {
+                    fingerScroll(offsetY, ev);
                 }
             }
             break;
@@ -174,6 +179,7 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                mAttached = false;
                 mActivePointerId = INVALID_POINTER;
                 onActivePointerUp();
                 break;
@@ -181,11 +187,29 @@ public class RefreshLayout extends ViewGroup {
         return super.dispatchTouchEvent(ev);
     }
 
-    private void fingerScroll(float diffY) {
+    private boolean fingerScroll(float diffY, MotionEvent ev) {
+        if (mAttached) {
+            return super.dispatchTouchEvent(ev);
+        }
         int top = mTargetView.getTop();
         float ratio = -0.001f * Math.abs(top) + 1;
         int offset = (int) (diffY * ratio);
+        if (mStatus > 0) {
+            float y = top + offset;
+            if (y <= 0) {
+                offset = -top;
+                mAttached = true;
+            }
+        } else if (mStatus < 0) {
+            float y = top + offset;
+            if (y >= 0) {
+                offset = -top;
+                mAttached = true;
+            }
+        }
         updateScroll(offset);
+        Logger.e("top begin = " + top + ", offset = " + offset + ", end = " + mTargetView.getTop());
+        return true;
     }
 
     private float getMotionEventX(MotionEvent event, int pointerId) {
