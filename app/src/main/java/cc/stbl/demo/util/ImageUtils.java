@@ -22,4 +22,10 @@ public class ImageUtils {
                 .into(view);
     }
 
+    public static void load(String url, ImageView view) {
+        Glide.with(App.getContext())
+                .load(url)
+                .into(view);
+    }
+
 }
