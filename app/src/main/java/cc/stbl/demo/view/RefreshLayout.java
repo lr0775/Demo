@@ -12,7 +12,6 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
-import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
@@ -123,7 +122,6 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                Logger.e("action down");
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -136,7 +134,6 @@ public class RefreshLayout extends ViewGroup {
             }
             break;
             case MotionEvent.ACTION_MOVE: {
-                Logger.e("action move");
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float diffX = x - mFirstX;
@@ -169,13 +166,11 @@ public class RefreshLayout extends ViewGroup {
             }
             break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                Logger.e("onTouchEvent action pointer down");
                 onSecondPointerDown(ev);
                 mLastX = getMotionEventX(ev, mActivePointerId);
                 mLastY = getMotionEventY(ev, mActivePointerId);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                Logger.e("onTouchEvent action pointer up");
                 onSecondPointerUp(ev);
                 mLastX = getMotionEventX(ev, mActivePointerId);
                 mLastY = getMotionEventY(ev, mActivePointerId);
@@ -258,7 +253,6 @@ public class RefreshLayout extends ViewGroup {
 
     private void onActivePointerUp() {
         int top = mTargetView.getTop();
-        Logger.e("top = " + top);
         mScrollLastY = 0;
         mScroller.startScroll(0, 0, 0, -top, 300);
         invalidate();
@@ -271,7 +265,6 @@ public class RefreshLayout extends ViewGroup {
             return;
         }
         int currY = mScroller.getCurrY();
-        Logger.e("currY = " + currY + ", top = " + mTargetView.getTop());
         int offset = currY - mScrollLastY;
         mScrollLastY = currY;
         updateScroll(offset);
