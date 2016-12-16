@@ -196,13 +196,13 @@ public class RefreshLayout extends ViewGroup {
         int offset = (int) (offsetY * ratio);
         if (mStatus > 0) {
             float y = top + offset;
-            if (y <= 0) {
+            if (y < 0) {
                 offset = -top;
                 mAttached = true;
             }
         } else if (mStatus < 0) {
             float y = top + offset;
-            if (y >= 0) {
+            if (y > 0) {
                 offset = -top;
                 mAttached = true;
             }
