@@ -142,6 +142,10 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
+                if (mAttached) {
+                    mIntercepted = false;
+                    return super.dispatchTouchEvent(ev);
+                }
                 if (!mIntercepted) {
                     boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
                     if (moved) {
@@ -161,7 +165,8 @@ public class RefreshLayout extends ViewGroup {
                     }
                 }
                 if (mIntercepted) {
-                    return fingerScroll(offsetY, ev);
+                    fingerScroll(offsetY, ev);
+                    return true;
                 }
             }
             break;
@@ -185,11 +190,7 @@ public class RefreshLayout extends ViewGroup {
         return super.dispatchTouchEvent(ev);
     }
 
-    private boolean fingerScroll(float offsetY, MotionEvent ev) {
-        if (mAttached) {
-            mIntercepted = false;
-            return super.dispatchTouchEvent(ev);
-        }
+    private void fingerScroll(float offsetY, MotionEvent ev) {
         int top = mTargetView.getTop();
         float ratio = -0.001f * Math.abs(top) + 1;
         int offset = (int) (offsetY * ratio);
@@ -207,7 +208,6 @@ public class RefreshLayout extends ViewGroup {
             }
         }
         updateScroll(offset);
-        return true;
     }
 
     private float getMotionEventX(MotionEvent event, int pointerId) {
