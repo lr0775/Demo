@@ -165,7 +165,7 @@ public class RefreshLayout extends ViewGroup {
                         mIntercepted = false;
                         return super.dispatchTouchEvent(ev);
                     }
-                    fingerScroll(offsetY, ev);
+                    fingerScroll(offsetY);
                     return true;
                 }
             }
@@ -190,22 +190,17 @@ public class RefreshLayout extends ViewGroup {
         return super.dispatchTouchEvent(ev);
     }
 
-    private void fingerScroll(float offsetY, MotionEvent ev) {
+    private void fingerScroll(float offsetY) {
         int top = mTargetView.getTop();
         float ratio = -0.001f * Math.abs(top) + 1;
         int offset = (int) (offsetY * ratio);
-        if (mStatus > 0) {
-            float y = top + offset;
-            if (y <= 0) {
-                offset = -top;
-                mAttached = true;
-            }
-        } else if (mStatus < 0) {
-            float y = top + offset;
-            if (y >= 0) {
-                offset = -top;
-                mAttached = true;
-            }
+        float y = top + offset;
+        if ((mStatus > 0 && y < 0) || (mStatus < 0 && y > 0)) {
+            offset = -top;
+        }
+        if (top == 0) {
+            mAttached = true;
+            return;
         }
         updateScroll(offset);
     }
