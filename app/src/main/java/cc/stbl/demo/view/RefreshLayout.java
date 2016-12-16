@@ -197,10 +197,7 @@ public class RefreshLayout extends ViewGroup {
         float y = top + offset;
         if ((mStatus > 0 && y < 0) || (mStatus < 0 && y > 0)) {
             offset = -top;
-        }
-        if (top == 0) {
             mAttached = true;
-            return;
         }
         updateScroll(offset);
     }
