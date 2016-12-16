@@ -142,10 +142,6 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (mAttached) {
-                    mIntercepted = false;
-                    return super.dispatchTouchEvent(ev);
-                }
                 if (!mIntercepted) {
                     boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
                     if (moved) {
@@ -165,6 +161,10 @@ public class RefreshLayout extends ViewGroup {
                     }
                 }
                 if (mIntercepted) {
+                    if (mAttached) {
+                        mIntercepted = false;
+                        return super.dispatchTouchEvent(ev);
+                    }
                     fingerScroll(offsetY, ev);
                     return true;
                 }
