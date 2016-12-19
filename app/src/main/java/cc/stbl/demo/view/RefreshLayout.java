@@ -49,7 +49,6 @@ public class RefreshLayout extends ViewGroup {
     private float mLastX;
     private float mLastY;
     private boolean mIntercepted;
-    private boolean mAttached;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -149,22 +148,16 @@ public class RefreshLayout extends ViewGroup {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mIntercepted = true;
-                                mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mIntercepted = true;
-                                mAttached = false;
                             }
                         }
                     }
                 }
                 if (mIntercepted) {
-                    if (mAttached) {
-                        mIntercepted = false;
-                        return super.dispatchTouchEvent(ev);
-                    }
                     fingerScroll(offsetY);
                     return true;
                 }
@@ -182,7 +175,6 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                mAttached = false;
                 mActivePointerId = INVALID_POINTER;
                 onActivePointerUp();
                 break;
@@ -195,9 +187,9 @@ public class RefreshLayout extends ViewGroup {
         float ratio = -0.001f * Math.abs(top) + 1;
         int offset = (int) (offsetY * ratio);
         float y = top + offset;
-        if ((mStatus > 0 && y < 0) || (mStatus < 0 && y > 0)) {
+        if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
             offset = -top;
-            mAttached = true;
+            mIntercepted = false;
         }
         updateScroll(offset);
     }
