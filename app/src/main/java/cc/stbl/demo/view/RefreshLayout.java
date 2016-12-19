@@ -24,6 +24,11 @@ public class RefreshLayout extends ViewGroup {
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
+    private static final int BEGIN = -1;
+    private static final int ZERO = 0;
+    private static final int VERTICAL = 1;
+    private static final int HORIZONTAL = 2;
+
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
 
@@ -48,7 +53,7 @@ public class RefreshLayout extends ViewGroup {
     private float mFirstY;
     private float mLastX;
     private float mLastY;
-    private boolean mIntercepted;
+    private int mInterceptOrientation;//0--复位，1--垂直，2--水平
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -129,7 +134,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
-                mIntercepted = false;
+                mInterceptOrientation = BEGIN;
             }
             break;
             case MotionEvent.ACTION_MOVE: {
@@ -141,23 +146,27 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (!mIntercepted) {
-                    boolean moved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
-                    if (moved) {
+                if (mInterceptOrientation <= ZERO) {
+                    boolean verticalMoved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
+                    boolean horizontalMoved = Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY);
+                    if (verticalMoved) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
-                                mIntercepted = true;
+                                mInterceptOrientation = VERTICAL;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
-                                mIntercepted = true;
+                                mInterceptOrientation = VERTICAL;
                             }
                         }
                     }
+                    if (mInterceptOrientation == BEGIN && horizontalMoved) {
+                        mInterceptOrientation = HORIZONTAL;
+                    }
                 }
-                if (mIntercepted) {
+                if (mInterceptOrientation == VERTICAL) {
                     fingerScroll(offsetY);
                     return true;
                 }
@@ -189,7 +198,7 @@ public class RefreshLayout extends ViewGroup {
         float y = top + offset;
         if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
             offset = -top;
-            mIntercepted = false;
+            mInterceptOrientation = ZERO;
         }
         updateScroll(offset);
     }
