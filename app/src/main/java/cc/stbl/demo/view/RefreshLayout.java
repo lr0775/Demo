@@ -50,6 +50,7 @@ public class RefreshLayout extends ViewGroup {
     private float mLastY;
     private boolean mIntercepted;
     private boolean mAttached;
+    private boolean mReseted;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -183,6 +184,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mAttached = false;
+                mReseted = false;
                 mActivePointerId = INVALID_POINTER;
                 onActivePointerUp();
                 break;
@@ -191,13 +193,17 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void fingerScroll(float offsetY) {
+        if (mReseted) {
+            mAttached = true;
+            return;
+        }
         int top = mTargetView.getTop();
         float ratio = -0.001f * Math.abs(top) + 1;
         int offset = (int) (offsetY * ratio);
         float y = top + offset;
-        if ((mStatus > 0 && y < 0) || (mStatus < 0 && y > 0)) {
+        if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
+            mReseted = true;
             offset = -top;
-            mAttached = true;
         }
         updateScroll(offset);
     }
