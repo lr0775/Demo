@@ -24,6 +24,7 @@ public class RefreshLayout extends ViewGroup {
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
+    private static final int BEGIN = -1;
     private static final int ORIGINAL = 0;
     private static final int VERTICAL = 1;
     private static final int HORIZONTAL = 2;
@@ -133,7 +134,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
-                mInterceptOrientation = ORIGINAL;
+                mInterceptOrientation = BEGIN;
             }
             break;
             case MotionEvent.ACTION_MOVE: {
@@ -145,9 +146,8 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (mInterceptOrientation == ORIGINAL) {
-                    boolean verticalMoved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
-                    if (verticalMoved) {
+                if (mInterceptOrientation <= ORIGINAL) {
+                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
@@ -160,14 +160,12 @@ public class RefreshLayout extends ViewGroup {
                             }
                         }
                     }
-
                 }
                 if (mInterceptOrientation == VERTICAL) {
                     fingerScroll(offsetY);
                     return true;
                 }
-                boolean horizontalMoved = Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY);
-                if (mInterceptOrientation != VERTICAL && horizontalMoved) {
+                if (mInterceptOrientation == BEGIN && Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY)) {
                     mInterceptOrientation = HORIZONTAL;
                 }
             }
