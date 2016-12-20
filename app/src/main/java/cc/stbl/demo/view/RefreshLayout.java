@@ -134,7 +134,10 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
-                mInterceptOrientation = BEGIN;
+                mScroller.forceFinished(true);
+                if (mTargetView.getTop() == 0) {
+                    mInterceptOrientation = BEGIN;
+                }
             }
             break;
             case MotionEvent.ACTION_MOVE: {
@@ -183,7 +186,10 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                onActivePointerUp();
+                if (mInterceptOrientation == VERTICAL) {
+                    onActivePointerUp();
+                    return true;
+                }
                 break;
         }
         return super.dispatchTouchEvent(ev);
