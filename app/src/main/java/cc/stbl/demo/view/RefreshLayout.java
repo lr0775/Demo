@@ -191,7 +191,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (mInterceptOrientation == VERTICAL) {
+                if (mTargetView.getTop() != 0) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
