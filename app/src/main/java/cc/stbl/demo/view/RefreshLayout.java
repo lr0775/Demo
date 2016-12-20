@@ -24,7 +24,8 @@ public class RefreshLayout extends ViewGroup {
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
-    private static final int BEGIN = -1;
+    private static final int BEGIN = -2;
+    private static final int CHILD = -1;
     private static final int ORIGINAL = 0;
     private static final int VERTICAL = 1;
     private static final int HORIZONTAL = 2;
@@ -168,8 +169,12 @@ public class RefreshLayout extends ViewGroup {
                     fingerScroll(offsetY);
                     return true;
                 }
-                if (mInterceptOrientation == BEGIN && Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY)) {
-                    mInterceptOrientation = HORIZONTAL;
+                if (mInterceptOrientation == BEGIN) {
+                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
+                        mInterceptOrientation = CHILD;
+                    } else if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > 2 * Math.abs(diffY)) {
+                        mInterceptOrientation = HORIZONTAL;
+                    }
                 }
             }
             break;
