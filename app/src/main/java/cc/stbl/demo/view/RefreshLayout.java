@@ -48,6 +48,8 @@ public class RefreshLayout extends ViewGroup {
     private int mFooterHeight;
 
     private int mActivePointerId;
+    private float mFirstX;
+    private float mFirstY;
     private float mLastX;
     private float mLastY;
     private int mInterceptOrientation;//0--复位，1--垂直，2--水平
@@ -124,25 +126,27 @@ public class RefreshLayout extends ViewGroup {
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
                 mActivePointerId = ev.getPointerId(0);
-                float x = getMotionEventX(ev, mActivePointerId);
-                float y = getMotionEventY(ev, mActivePointerId);
-                if (x == INVALID_COORDINATE || y == INVALID_COORDINATE) {
+                mFirstX = getMotionEventX(ev, mActivePointerId);
+                mFirstY = getMotionEventY(ev, mActivePointerId);
+                if (mFirstX == INVALID_COORDINATE || mFirstY == INVALID_COORDINATE) {
                     return false;
                 }
-                mLastX = x;
-                mLastY = y;
+                mLastX = mFirstX;
+                mLastY = mFirstY;
                 mInterceptOrientation = ORIGINAL;
             }
             break;
             case MotionEvent.ACTION_MOVE: {
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
+                float diffX = x - mFirstX;
+                float diffY = y - mFirstY;
                 float offsetX = x - mLastX;
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
                 if (mInterceptOrientation == ORIGINAL) {
-                    boolean verticalMoved = Math.abs(offsetY) > mTouchSlop && Math.abs(offsetY) > Math.abs(offsetX);
+                    boolean verticalMoved = Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX);
                     if (verticalMoved) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
@@ -162,7 +166,7 @@ public class RefreshLayout extends ViewGroup {
                     fingerScroll(offsetY);
                     return true;
                 }
-                boolean horizontalMoved = Math.abs(offsetX) > mTouchSlop && Math.abs(offsetX) > Math.abs(offsetY);
+                boolean horizontalMoved = Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY);
                 if (mInterceptOrientation != VERTICAL && horizontalMoved) {
                     mInterceptOrientation = HORIZONTAL;
                 }
