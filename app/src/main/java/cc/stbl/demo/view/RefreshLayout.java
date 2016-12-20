@@ -176,6 +176,11 @@ public class RefreshLayout extends ViewGroup {
                         mInterceptOrientation = HORIZONTAL;
                     }
                 }
+                if (mInterceptOrientation == ORIGINAL) {
+                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
+                        mInterceptOrientation = CHILD;
+                    }
+                }
             }
             break;
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -191,7 +196,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (mTargetView.getTop() != 0) {
+                if (mInterceptOrientation == VERTICAL || mInterceptOrientation == ORIGINAL) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
