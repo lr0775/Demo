@@ -149,24 +149,22 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (mInterceptOrientation <= ORIGINAL) {
-                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
-                        if (offsetY > 0) {
-                            if (onCheckCanRefresh()) {
-                                mStatus = 1;
-                                mInterceptOrientation = VERTICAL;
-                            }
-                        } else {
-                            if (onCheckCanLoadMore()) {
-                                mStatus = -1;
-                                mInterceptOrientation = VERTICAL;
-                            }
-                        }
-                    }
-                }
                 if (mInterceptOrientation == VERTICAL) {
                     fingerScroll(offsetY);
                     return true;
+                }
+                if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
+                    if (offsetY > 0) {
+                        if (onCheckCanRefresh()) {
+                            mStatus = 1;
+                            mInterceptOrientation = VERTICAL;
+                        }
+                    } else {
+                        if (onCheckCanLoadMore()) {
+                            mStatus = -1;
+                            mInterceptOrientation = VERTICAL;
+                        }
+                    }
                 }
                 if (mInterceptOrientation == BEGIN && Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY)) {
                     mInterceptOrientation = HORIZONTAL;
