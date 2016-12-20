@@ -12,6 +12,7 @@ import java.util.Collections;
 
 import cc.stbl.demo.R;
 import cc.stbl.demo.util.ImageUtils;
+import cc.stbl.demo.util.Toaster;
 
 public class RefreshActivity extends BaseActivity {
 
@@ -37,11 +38,18 @@ public class RefreshActivity extends BaseActivity {
         urlList2.addAll(urlList);
         Collections.reverse(urlList2);
         mViewPager2.setAdapter(new BannerPagerAdapter(urlList2));
+        mAdapter.setOnItemClickListener(new BannerPagerAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                Toaster.show("点击第" + position + "项");
+            }
+        });
     }
 
-    private class BannerPagerAdapter extends PagerAdapter {
+    private static class BannerPagerAdapter extends PagerAdapter {
 
         private ArrayList<String> mList;
+        private OnItemClickListener onItemClickListener;
 
         public BannerPagerAdapter(ArrayList<String> bannerList) {
             mList = bannerList;
@@ -58,17 +66,33 @@ public class RefreshActivity extends BaseActivity {
         }
 
         @Override
-        public Object instantiateItem(ViewGroup container, int position) {
+        public Object instantiateItem(ViewGroup container, final int position) {
             ImageView view = new ImageView(container.getContext());
             view.setScaleType(ImageView.ScaleType.CENTER_CROP);
             ImageUtils.load(mList.get(position), view);
             container.addView(view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (onItemClickListener != null) {
+                        onItemClickListener.onItemClick(position);
+                    }
+                }
+            });
             return view;
         }
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView((View) object);
+        }
+
+        public void setOnItemClickListener(OnItemClickListener listener) {
+            onItemClickListener = listener;
+        }
+
+        public interface OnItemClickListener {
+            void onItemClick(int position);
         }
 
     }
