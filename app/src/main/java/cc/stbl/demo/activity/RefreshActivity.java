@@ -46,7 +46,7 @@ public class RefreshActivity extends BaseActivity {
         });
     }
 
-    private static class BannerPagerAdapter extends PagerAdapter {
+    public static class BannerPagerAdapter extends PagerAdapter {
 
         private ArrayList<String> mList;
         private OnItemClickListener onItemClickListener;
