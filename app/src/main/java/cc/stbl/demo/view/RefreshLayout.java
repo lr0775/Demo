@@ -252,6 +252,17 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private boolean onCheckCanLoadMore() {
+        if (mTargetView instanceof ViewGroup) {
+            ViewGroup layout = (ViewGroup) mTargetView;
+            int childCount = layout.getChildCount();
+            if (childCount == 0) {
+                return false;
+            }
+            View child = layout.getChildAt(childCount - 1);
+            if (child.getBottom() < mTargetView.getHeight() - mTargetView.getPaddingBottom()) {
+                return false;
+            }
+        }
         return mLoadMoreEnabled && !ViewCompat.canScrollVertically(mTargetView, 1);
     }
 
