@@ -139,8 +139,9 @@ public class RefreshLayout extends ViewGroup {
                 if (mTargetView.getTop() == 0) {
                     mInterceptOrientation = BEGIN;
                 }
+                super.dispatchTouchEvent(ev);
+                return true;
             }
-            break;
             case MotionEvent.ACTION_MOVE: {
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
