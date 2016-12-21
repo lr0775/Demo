@@ -152,7 +152,7 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = x;
                 mLastY = y;
                 if (mInterceptOrientation == BEGIN) {
-                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > 2 * Math.abs(diffY)) {
+                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY)) {
                         mInterceptOrientation = HORIZONTAL;
                     }
                 }
