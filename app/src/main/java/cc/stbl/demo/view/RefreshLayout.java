@@ -24,6 +24,7 @@ public class RefreshLayout extends ViewGroup {
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
+    private static final int SETTLE = -3;
     private static final int BEGIN = -2;
     private static final int CHILD = -1;
     private static final int ORIGINAL = 0;
@@ -136,7 +137,7 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = mFirstX;
                 mLastY = mFirstY;
                 mScroller.forceFinished(true);
-                if (mTargetView.getTop() == 0) {
+                if (mTargetView.getTop() == 0 && mInterceptOrientation != SETTLE) {
                     mInterceptOrientation = BEGIN;
                 }
                 super.dispatchTouchEvent(ev);
@@ -200,6 +201,9 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
+                if (mInterceptOrientation == HORIZONTAL) {
+                    mInterceptOrientation = SETTLE;
+                }
                 if (mInterceptOrientation == VERTICAL || mInterceptOrientation == ORIGINAL) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
@@ -209,6 +213,16 @@ public class RefreshLayout extends ViewGroup {
                 break;
         }
         return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        if (disallowIntercept) {
+            if (mInterceptOrientation == SETTLE) {
+                mInterceptOrientation = HORIZONTAL;
+            }
+        }
+        super.requestDisallowInterceptTouchEvent(disallowIntercept);
     }
 
     private void fingerScroll(float offsetY) {
