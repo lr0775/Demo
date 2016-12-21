@@ -151,17 +151,29 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
+                if (mInterceptOrientation == BEGIN) {
+                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > 2 * Math.abs(diffY)) {
+                        mInterceptOrientation = HORIZONTAL;
+                    }
+                }
+                if (mInterceptOrientation == HORIZONTAL) {
+                    return super.dispatchTouchEvent(ev);
+                }
                 if (mInterceptOrientation <= ORIGINAL) {
                     if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mInterceptOrientation = VERTICAL;
+                            } else {
+                                mInterceptOrientation = CHILD;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mInterceptOrientation = VERTICAL;
+                            } else {
+                                mInterceptOrientation = CHILD;
                             }
                         }
                     }
@@ -170,17 +182,8 @@ public class RefreshLayout extends ViewGroup {
                     fingerScroll(offsetY);
                     return true;
                 }
-                if (mInterceptOrientation == BEGIN) {
-                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
-                        mInterceptOrientation = CHILD;
-                    } else if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > 2 * Math.abs(diffY)) {
-                        mInterceptOrientation = HORIZONTAL;
-                    }
-                }
-                if (mInterceptOrientation == ORIGINAL) {
-                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
-                        mInterceptOrientation = CHILD;
-                    }
+                if (mInterceptOrientation != CHILD) {
+                    return true;
                 }
             }
             break;
