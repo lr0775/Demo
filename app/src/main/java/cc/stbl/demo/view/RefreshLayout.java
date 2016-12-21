@@ -182,7 +182,7 @@ public class RefreshLayout extends ViewGroup {
                     fingerScroll(offsetY);
                     return true;
                 }
-                if (mInterceptOrientation != CHILD) {
+                if (mInterceptOrientation == ORIGINAL) {
                     return true;
                 }
             }
