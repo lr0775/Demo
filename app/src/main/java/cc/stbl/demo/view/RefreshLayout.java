@@ -155,13 +155,13 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = x;
                 mLastY = y;
                 if (mAttached) {
-                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
+                    if (Math.abs(diffY) > mTouchSlop) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mAttached = false;
                             }
-                        } else {
+                        } else if (offsetY < 0) {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mAttached = false;
