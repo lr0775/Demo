@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
+import java.util.ArrayList;
+
 import cc.stbl.demo.R;
 
 /**
@@ -23,13 +25,6 @@ public class RefreshLayout extends ViewGroup {
 
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
-
-    private static final int SETTLE = -3;
-    private static final int BEGIN = -2;
-    private static final int CHILD = -1;
-    private static final int ORIGINAL = 0;
-    private static final int VERTICAL = 1;
-    private static final int HORIZONTAL = 2;
 
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
@@ -55,7 +50,9 @@ public class RefreshLayout extends ViewGroup {
     private float mFirstY;
     private float mLastX;
     private float mLastY;
-    private int mInterceptOrientation;//0--复位，1--垂直，2--水平
+
+    private boolean mAttached = true;
+    private ArrayList<Integer> mActionList;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -73,6 +70,7 @@ public class RefreshLayout extends ViewGroup {
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mScroller = new Scroller(context, new DecelerateInterpolator());
+        mActionList = new ArrayList<>();
     }
 
     @Override
@@ -128,6 +126,8 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                mActionList.clear();
+                mActionList.add(MotionEvent.ACTION_DOWN);
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -137,13 +137,17 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = mFirstX;
                 mLastY = mFirstY;
                 mScroller.forceFinished(true);
-                if (mTargetView.getTop() == 0 && mInterceptOrientation != SETTLE) {
-                    mInterceptOrientation = BEGIN;
+                if (mTargetView.getTop() == 0) {
+                    mAttached = true;
                 }
                 super.dispatchTouchEvent(ev);
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
+                mActionList.add(MotionEvent.ACTION_MOVE);
+                if (mActionList.get(1) == Integer.MAX_VALUE) {
+                    return super.dispatchTouchEvent(ev);
+                }
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float diffX = x - mFirstX;
@@ -152,38 +156,23 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (mInterceptOrientation == BEGIN) {
-                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY)) {
-                        mInterceptOrientation = HORIZONTAL;
-                    }
-                }
-                if (mInterceptOrientation == HORIZONTAL) {
-                    return super.dispatchTouchEvent(ev);
-                }
-                if (mInterceptOrientation <= ORIGINAL) {
+                if (mAttached) {
                     if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
-                                mInterceptOrientation = VERTICAL;
-                            } else {
-                                mInterceptOrientation = CHILD;
+                                mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
-                                mInterceptOrientation = VERTICAL;
-                            } else {
-                                mInterceptOrientation = CHILD;
+                                mAttached = false;
                             }
                         }
                     }
                 }
-                if (mInterceptOrientation == VERTICAL) {
+                if (!mAttached) {
                     fingerScroll(offsetY);
-                    return true;
-                }
-                if (mInterceptOrientation == ORIGINAL) {
                     return true;
                 }
             }
@@ -201,26 +190,20 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (mInterceptOrientation == HORIZONTAL) {
-                    mInterceptOrientation = SETTLE;
-                }
-                if (mInterceptOrientation == VERTICAL || mInterceptOrientation == ORIGINAL) {
+                if (!mAttached) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
                     return true;
                 }
-                break;
         }
         return super.dispatchTouchEvent(ev);
     }
 
     @Override
     public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-        if (disallowIntercept) {
-            if (mInterceptOrientation == SETTLE) {
-                mInterceptOrientation = HORIZONTAL;
-            }
+        if (disallowIntercept && mActionList.size() > 0) {
+            mActionList.add(Integer.MAX_VALUE);
         }
         super.requestDisallowInterceptTouchEvent(disallowIntercept);
     }
@@ -232,7 +215,7 @@ public class RefreshLayout extends ViewGroup {
         float y = top + offset;
         if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
             offset = -top;
-            mInterceptOrientation = ORIGINAL;
+            mAttached = true;
         }
         updateScroll(offset);
     }
