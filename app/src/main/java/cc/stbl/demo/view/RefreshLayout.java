@@ -11,8 +11,6 @@ import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
-import java.util.ArrayList;
-
 import cc.stbl.demo.R;
 
 /**
@@ -52,7 +50,7 @@ public class RefreshLayout extends ViewGroup {
     private float mLastY;
 
     private boolean mAttached = true;
-    private ArrayList<Integer> mActionList;
+    private int[] mActionArray;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -70,7 +68,7 @@ public class RefreshLayout extends ViewGroup {
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mScroller = new Scroller(context, new DecelerateInterpolator());
-        mActionList = new ArrayList<>();
+        mActionArray = new int[2];
     }
 
     @Override
@@ -126,8 +124,8 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                mActionList.clear();
-                mActionList.add(MotionEvent.ACTION_DOWN);
+                mActionArray[0] = MotionEvent.ACTION_DOWN;
+                mActionArray[1] = 0;
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -144,10 +142,10 @@ public class RefreshLayout extends ViewGroup {
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
-                mActionList.add(MotionEvent.ACTION_MOVE);
-                if (mActionList.get(1) == Integer.MAX_VALUE) {
+                if (mActionArray[1] == Integer.MAX_VALUE) {
                     return super.dispatchTouchEvent(ev);
                 }
+                mActionArray[1] = MotionEvent.ACTION_MOVE;
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float diffX = x - mFirstX;
@@ -202,8 +200,8 @@ public class RefreshLayout extends ViewGroup {
 
     @Override
     public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-        if (disallowIntercept) {
-            mActionList.add(Integer.MAX_VALUE);
+        if (disallowIntercept && mActionArray[1] == 0) {
+            mActionArray[1] = Integer.MAX_VALUE;
         }
         super.requestDisallowInterceptTouchEvent(disallowIntercept);
     }
