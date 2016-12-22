@@ -12,6 +12,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
+import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
@@ -21,7 +22,6 @@ import cc.stbl.demo.R;
 
 public class RefreshLayout extends ViewGroup {
 
-    private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
 
     private boolean mRefreshEnabled = true;
@@ -52,7 +52,7 @@ public class RefreshLayout extends ViewGroup {
     private int[] mActionArray;
     private boolean mIsBeingDragged;
     private boolean mIsUnableToDrag;
-    private boolean mAttached;
+    private boolean mHorizontalIntercepted;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -135,14 +135,13 @@ public class RefreshLayout extends ViewGroup {
 
                 mIsUnableToDrag = false;
                 mScroller.forceFinished(true);
-                if (mTargetView.getTop() == 0) {
-                    mAttached = true;
-                }
                 super.dispatchTouchEvent(ev);
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
-                if (mActionArray[1] == Integer.MAX_VALUE && mAttached) {
+                int top = mTargetView.getTop();
+                if (mActionArray[1] == Integer.MAX_VALUE && mHorizontalIntercepted) {
+                    mIsBeingDragged = true;
                     return super.dispatchTouchEvent(ev);
                 }
                 mActionArray[1] = MotionEvent.ACTION_MOVE;
@@ -165,24 +164,27 @@ public class RefreshLayout extends ViewGroup {
 
                 if (mIsUnableToDrag) {
                     mLastMotionY = y;
-                    if (mAttached) {
-                        if (yOffset > 0) {
-                            if (onCheckCanRefresh()) {
-                                mStatus = 1;
-                                mAttached = false;
-                            }
-                        } else if (yOffset < 0) {
-                            if (onCheckCanLoadMore()) {
-                                mStatus = -1;
-                                mAttached = false;
+                    if (yOffset > 0) {
+                        if (onCheckCanRefresh()) {
+                            mStatus = 1;
+                        } else {
+                            if (top == 0) {
+                                return super.dispatchTouchEvent(ev);
                             }
                         }
-                    }
-                    if (!mAttached) {
+                        fingerScroll(yOffset);
+                        return true;
+                    } else if (yOffset < 0) {
+                        if (onCheckCanLoadMore()) {
+                            mStatus = -1;
+                        } else {
+                            if (top == 0) {
+                                return super.dispatchTouchEvent(ev);
+                            }
+                        }
                         fingerScroll(yOffset);
                         return true;
                     }
-                    return super.dispatchTouchEvent(ev);
                 }
 
                 if (xDiff > mTouchSlop && xDiff * 0.5f > yDiff) {
@@ -194,24 +196,29 @@ public class RefreshLayout extends ViewGroup {
                 } else if (yDiff > mTouchSlop) {
                     mIsUnableToDrag = true;
                     mLastMotionY = y;
-                    if (mAttached) {
-                        if (yOffset > 0) {
-                            if (onCheckCanRefresh()) {
-                                mStatus = 1;
-                                mAttached = false;
-                            }
-                        } else if (yOffset < 0) {
-                            if (onCheckCanLoadMore()) {
-                                mStatus = -1;
-                                mAttached = false;
+                    if (yOffset > 0) {
+                        if (onCheckCanRefresh()) {
+                            mStatus = 1;
+                        } else {
+                            if (top == 0) {
+                                return super.dispatchTouchEvent(ev);
                             }
                         }
-                    }
-                    if (!mAttached) {
+                        Logger.e("finger");
+                        fingerScroll(yOffset);
+                        return true;
+                    } else if (yOffset < 0) {
+                        if (onCheckCanLoadMore()) {
+                            mStatus = -1;
+                        } else {
+                            if (top == 0) {
+                                return super.dispatchTouchEvent(ev);
+                            }
+                        }
+                        Logger.e("finger");
                         fingerScroll(yOffset);
                         return true;
                     }
-                    return super.dispatchTouchEvent(ev);
                 }
             }
             break;
@@ -231,9 +238,11 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
+                if (mIsBeingDragged) {
+                    mHorizontalIntercepted = true;
+                }
                 mIsBeingDragged = false;
-                mIsUnableToDrag = false;
-                if (!mAttached) {
+                if (mTargetView.getTop() != 0) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
@@ -258,7 +267,6 @@ public class RefreshLayout extends ViewGroup {
         float y = top + offset;
         if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
             offset = -top;
-            mAttached = true;
         }
         updateScroll(offset);
     }
