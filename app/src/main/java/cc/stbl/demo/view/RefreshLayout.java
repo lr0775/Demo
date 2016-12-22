@@ -49,7 +49,7 @@ public class RefreshLayout extends ViewGroup {
     private float mLastX;
     private float mLastY;
 
-    private boolean mAttached = true;
+    private int mAttacheStatus;
     private int[] mActionArray;
 
     private Scroller mScroller;
@@ -136,7 +136,7 @@ public class RefreshLayout extends ViewGroup {
                 mLastY = mFirstY;
                 mScroller.forceFinished(true);
                 if (mTargetView.getTop() == 0) {
-                    mAttached = true;
+                    mAttacheStatus = -3;
                 }
                 super.dispatchTouchEvent(ev);
                 return true;
@@ -154,22 +154,34 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (mAttached) {
+                if (mAttacheStatus == -3) {
+                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > 2 * Math.abs(diffY)) {
+                        mAttacheStatus = -2;
+                    }
+                }
+                if (mAttacheStatus == -2) {
+                    return super.dispatchTouchEvent(ev);
+                }
+                if (mAttacheStatus <= 0) {
                     if (Math.abs(diffY) > mTouchSlop) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
-                                mAttached = false;
+                                mAttacheStatus = 1;
+                            } else {
+                                mAttacheStatus = -1;
                             }
                         } else if (offsetY < 0) {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
-                                mAttached = false;
+                                mAttacheStatus = 1;
+                            } else {
+                                mAttacheStatus = -1;
                             }
                         }
                     }
                 }
-                if (!mAttached) {
+                if (mAttacheStatus == 1) {
                     fingerScroll(offsetY);
                     return true;
                 }
@@ -188,7 +200,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (!mAttached) {
+                if (mAttacheStatus == 1) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
@@ -213,7 +225,7 @@ public class RefreshLayout extends ViewGroup {
         float y = top + offset;
         if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
             offset = -top;
-            mAttached = true;
+            mAttacheStatus = 0;
         }
         updateScroll(offset);
     }
