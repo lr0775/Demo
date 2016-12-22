@@ -157,19 +157,21 @@ public class RefreshLayout extends ViewGroup {
                 final float xDiff = Math.abs(dx);
                 final float y = ev.getY(pointerIndex);
                 final float yDiff = Math.abs(y - mInitialMotionY);
+                final float yOffset = y - mLastMotionY;
 
                 if (mIsBeingDragged) {
                     return super.dispatchTouchEvent(ev);
                 }
 
                 if (mIsUnableToDrag) {
+                    mLastMotionY = y;
                     if (mAttached) {
-                        if (yDiff > 0) {
+                        if (yOffset > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mAttached = false;
                             }
-                        } else if (yDiff < 0) {
+                        } else if (yOffset < 0) {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mAttached = false;
@@ -177,7 +179,7 @@ public class RefreshLayout extends ViewGroup {
                         }
                     }
                     if (!mAttached) {
-                        fingerScroll(yDiff);
+                        fingerScroll(yOffset);
                         return true;
                     }
                     return super.dispatchTouchEvent(ev);
@@ -191,13 +193,14 @@ public class RefreshLayout extends ViewGroup {
                     return super.dispatchTouchEvent(ev);
                 } else if (yDiff > mTouchSlop) {
                     mIsUnableToDrag = true;
+                    mLastMotionY = y;
                     if (mAttached) {
-                        if (yDiff > 0) {
+                        if (yOffset > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mAttached = false;
                             }
-                        } else if (yDiff < 0) {
+                        } else if (yOffset < 0) {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mAttached = false;
@@ -205,7 +208,7 @@ public class RefreshLayout extends ViewGroup {
                         }
                     }
                     if (!mAttached) {
-                        fingerScroll(yDiff);
+                        fingerScroll(yOffset);
                         return true;
                     }
                     return super.dispatchTouchEvent(ev);
