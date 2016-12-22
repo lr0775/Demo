@@ -202,7 +202,7 @@ public class RefreshLayout extends ViewGroup {
 
     @Override
     public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-        if (disallowIntercept && mActionList.size() > 0) {
+        if (disallowIntercept) {
             mActionList.add(Integer.MAX_VALUE);
         }
         super.requestDisallowInterceptTouchEvent(disallowIntercept);
