@@ -44,13 +44,15 @@ public class RefreshLayout extends ViewGroup {
     private int mFooterHeight;
 
     private int mActivePointerId;
-    private float mFirstX;
-    private float mFirstY;
-    private float mLastX;
-    private float mLastY;
+    private float mInitialMotionX;
+    private float mInitialMotionY;
+    private float mLastMotionX;
+    private float mLastMotionY;
 
-    private int mAttacheStatus;
     private int[] mActionArray;
+    private boolean mIsBeingDragged;
+    private boolean mIsUnableToDrag;
+    private boolean mAttached;
 
     private Scroller mScroller;
     private int mScrollLastY;
@@ -126,81 +128,109 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_DOWN: {
                 mActionArray[0] = MotionEvent.ACTION_DOWN;
                 mActionArray[1] = 0;
+
+                mLastMotionX = mInitialMotionX = ev.getX();
+                mLastMotionY = mInitialMotionY = ev.getY();
                 mActivePointerId = ev.getPointerId(0);
-                mFirstX = getMotionEventX(ev, mActivePointerId);
-                mFirstY = getMotionEventY(ev, mActivePointerId);
-                if (mFirstX == INVALID_COORDINATE || mFirstY == INVALID_COORDINATE) {
-                    return false;
-                }
-                mLastX = mFirstX;
-                mLastY = mFirstY;
+
+                mIsUnableToDrag = false;
                 mScroller.forceFinished(true);
                 if (mTargetView.getTop() == 0) {
-                    mAttacheStatus = -3;
+                    mAttached = true;
                 }
                 super.dispatchTouchEvent(ev);
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
-                if (mActionArray[1] == Integer.MAX_VALUE) {
+                if (mActionArray[1] == Integer.MAX_VALUE && mAttached) {
                     return super.dispatchTouchEvent(ev);
                 }
                 mActionArray[1] = MotionEvent.ACTION_MOVE;
-                float x = getMotionEventX(ev, mActivePointerId);
-                float y = getMotionEventY(ev, mActivePointerId);
-                float diffX = x - mFirstX;
-                float diffY = y - mFirstY;
-                float offsetX = x - mLastX;
-                float offsetY = y - mLastY;
-                mLastX = x;
-                mLastY = y;
-                if (mAttacheStatus == -3) {
-                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > 2 * Math.abs(diffY)) {
-                        mAttacheStatus = -2;
-                    }
+
+                final int activePointerId = mActivePointerId;
+                if (activePointerId == INVALID_POINTER) {
+                    break;
                 }
-                if (mAttacheStatus == -2) {
+                final int pointerIndex = ev.findPointerIndex(activePointerId);
+                final float x = ev.getX(pointerIndex);
+                final float dx = x - mLastMotionX;
+                final float xDiff = Math.abs(dx);
+                final float y = ev.getY(pointerIndex);
+                final float yDiff = Math.abs(y - mInitialMotionY);
+
+                if (mIsBeingDragged) {
                     return super.dispatchTouchEvent(ev);
                 }
-                if (mAttacheStatus <= 0) {
-                    if (Math.abs(diffY) > mTouchSlop) {
-                        if (offsetY > 0) {
+
+                if (mIsUnableToDrag) {
+                    if (mAttached) {
+                        if (yDiff > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
-                                mAttacheStatus = 1;
-                            } else {
-                                mAttacheStatus = -1;
+                                mAttached = false;
                             }
-                        } else if (offsetY < 0) {
+                        } else if (yDiff < 0) {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
-                                mAttacheStatus = 1;
-                            } else {
-                                mAttacheStatus = -1;
+                                mAttached = false;
                             }
                         }
                     }
+                    if (!mAttached) {
+                        fingerScroll(yDiff);
+                        return true;
+                    }
+                    return super.dispatchTouchEvent(ev);
                 }
-                if (mAttacheStatus == 1) {
-                    fingerScroll(offsetY);
-                    return true;
+
+                if (xDiff > mTouchSlop && xDiff * 0.5f > yDiff) {
+                    mIsBeingDragged = true;
+                    mLastMotionX = dx > 0
+                            ? mInitialMotionX + mTouchSlop : mInitialMotionX - mTouchSlop;
+                    mLastMotionY = y;
+                    return super.dispatchTouchEvent(ev);
+                } else if (yDiff > mTouchSlop) {
+                    mIsUnableToDrag = true;
+                    if (mAttached) {
+                        if (yDiff > 0) {
+                            if (onCheckCanRefresh()) {
+                                mStatus = 1;
+                                mAttached = false;
+                            }
+                        } else if (yDiff < 0) {
+                            if (onCheckCanLoadMore()) {
+                                mStatus = -1;
+                                mAttached = false;
+                            }
+                        }
+                    }
+                    if (!mAttached) {
+                        fingerScroll(yDiff);
+                        return true;
+                    }
+                    return super.dispatchTouchEvent(ev);
                 }
             }
             break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                onSecondPointerDown(ev);
-                mLastX = getMotionEventX(ev, mActivePointerId);
-                mLastY = getMotionEventY(ev, mActivePointerId);
+                final int index = MotionEventCompat.getActionIndex(ev);
+                final float x = ev.getX(index);
+                final float y = ev.getY(index);
+                mLastMotionX = x;
+                mLastMotionY = y;
+                mActivePointerId = ev.getPointerId(index);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                onSecondPointerUp(ev);
-                mLastX = getMotionEventX(ev, mActivePointerId);
-                mLastY = getMotionEventY(ev, mActivePointerId);
+                onSecondaryPointerUp(ev);
+                mLastMotionX = ev.getX(ev.findPointerIndex(mActivePointerId));
+                mLastMotionY = ev.getY(ev.findPointerIndex(mActivePointerId));
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (mAttacheStatus == 1) {
+                mIsBeingDragged = false;
+                mIsUnableToDrag = false;
+                if (!mAttached) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
@@ -225,40 +255,20 @@ public class RefreshLayout extends ViewGroup {
         float y = top + offset;
         if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
             offset = -top;
-            mAttacheStatus = 0;
+            mAttached = true;
         }
         updateScroll(offset);
     }
 
-    private float getMotionEventX(MotionEvent event, int pointerId) {
-        int index = event.findPointerIndex(pointerId);
-        if (index < 0) {
-            return INVALID_COORDINATE;
-        }
-        return event.getX(index);
-    }
-
-    private float getMotionEventY(MotionEvent event, int pointerId) {
-        int index = event.findPointerIndex(pointerId);
-        if (index < 0) {
-            return INVALID_COORDINATE;
-        }
-        return event.getY(index);
-    }
-
-    private void onSecondPointerDown(MotionEvent ev) {
-        int pointerIndex = MotionEventCompat.getActionIndex(ev);
-        int pointerId = ev.getPointerId(pointerIndex);
-        if (pointerId != INVALID_POINTER) {
-            mActivePointerId = pointerId;
-        }
-    }
-
-    private void onSecondPointerUp(MotionEvent ev) {
-        int pointerIndex = MotionEventCompat.getActionIndex(ev);
-        int pointerId = ev.getPointerId(pointerIndex);
+    private void onSecondaryPointerUp(MotionEvent ev) {
+        final int pointerIndex = MotionEventCompat.getActionIndex(ev);
+        final int pointerId = ev.getPointerId(pointerIndex);
         if (pointerId == mActivePointerId) {
-            int newPointerIndex = (pointerIndex == 0 ? 1 : 0);
+            // This was our active pointer going up. Choose a new
+            // active pointer and adjust accordingly.
+            final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+            mLastMotionX = ev.getX(newPointerIndex);
+            mLastMotionY = ev.getY(newPointerIndex);
             mActivePointerId = ev.getPointerId(newPointerIndex);
         }
     }
