@@ -24,9 +24,6 @@ import cc.stbl.demo.R;
 
 public class RefreshLayout extends ViewGroup {
 
-    private static final int INVALID_COORDINATE = -1;
-    private static final int INVALID_POINTER = -1;
-
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
 
@@ -47,10 +44,10 @@ public class RefreshLayout extends ViewGroup {
     private int mFooterHeight;
 
     private int mActivePointerId;
-    private float mFirstX;
-    private float mFirstY;
-    private float mLastX;
-    private float mLastY;
+    private float mInitialMotionX;
+    private float mInitialMotionY;
+    private float mLastMotionX;
+    private float mLastMotionY;
     private boolean mAttached = true;
 
     private Scroller mScroller;
@@ -130,14 +127,10 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                mLastMotionX = mInitialMotionX = ev.getX();
+                mLastMotionY = mInitialMotionY = ev.getY();
                 mActivePointerId = ev.getPointerId(0);
-                mFirstX = getMotionEventX(ev, mActivePointerId);
-                mFirstY = getMotionEventY(ev, mActivePointerId);
-                if (mFirstX == INVALID_COORDINATE || mFirstY == INVALID_COORDINATE) {
-                    return false;
-                }
-                mLastX = mFirstX;
-                mLastY = mFirstY;
+
                 mScroller.forceFinished(true);
                 if (mTargetView.getTop() == 0) {
                     mAttached = true;
@@ -146,17 +139,29 @@ public class RefreshLayout extends ViewGroup {
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
-                float x = getMotionEventX(ev, mActivePointerId);
-                float y = getMotionEventY(ev, mActivePointerId);
-                float diffX = x - mFirstX;
-                float diffY = y - mFirstY;
-                float offsetX = x - mLastX;
-                float offsetY = y - mLastY;
-                mLastX = x;
-                mLastY = y;
+                final int activePointerId = mActivePointerId;
+                if (activePointerId == -1) {
+                    // If we don't have a valid id, the touch down wasn't on content.
+                    break;
+                }
+                final int pointerIndex = ev.findPointerIndex(activePointerId);
+                if (pointerIndex == -1) {
+                    // A child has consumed some touch events and put us into an inconsistent
+                    // state.
+                    break;
+                }
+                final float x = ev.getX(pointerIndex);
+                final float xDiff = x - mLastMotionX;
+                final float xDistance = x - mInitialMotionX;
+                final float y = ev.getY(pointerIndex);
+                final float yDiff = y - mLastMotionY;
+                final float yDistance = y - mInitialMotionY;
+                mLastMotionX = x;
+                mLastMotionY = y;
+
                 if (mAttached) {
-                    if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
-                        if (offsetY > 0) {
+                    if (Math.abs(yDistance) > mTouchSlop && (!(Math.abs(xDistance) * 0.5f > Math.abs(yDistance)))) {
+                        if (yDiff > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mAttached = false;
@@ -172,7 +177,7 @@ public class RefreshLayout extends ViewGroup {
                 if (!mAttached) {
                     int top = mTargetView.getTop();
                     float ratio = -0.001f * Math.abs(top) + 1;
-                    int offset = (int) (offsetY * ratio);
+                    int offset = (int) (yDiff * ratio);
                     float coorY = top + offset;
                     if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
                         offset = -top;
@@ -188,60 +193,37 @@ public class RefreshLayout extends ViewGroup {
             }
             break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                onSecondPointerDown(ev);
-                mLastX = getMotionEventX(ev, mActivePointerId);
-                mLastY = getMotionEventY(ev, mActivePointerId);
+                final int index = MotionEventCompat.getActionIndex(ev);
+                final float x = ev.getX(index);
+                final float y = ev.getY(index);
+                mLastMotionX = x;
+                mLastMotionY = y;
+                mActivePointerId = ev.getPointerId(index);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                onSecondPointerUp(ev);
-                mLastX = getMotionEventX(ev, mActivePointerId);
-                mLastY = getMotionEventY(ev, mActivePointerId);
+                final int pointerIndex = MotionEventCompat.getActionIndex(ev);
+                final int pointerId = ev.getPointerId(pointerIndex);
+                if (pointerId == mActivePointerId) {
+                    // This was our active pointer going up. Choose a new
+                    // active pointer and adjust accordingly.
+                    final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                    mLastMotionX = ev.getX(newPointerIndex);
+                    mLastMotionY = ev.getY(newPointerIndex);
+                    mActivePointerId = ev.getPointerId(newPointerIndex);
+                }
+                mLastMotionX = ev.getX(ev.findPointerIndex(mActivePointerId));
+                mLastMotionY = ev.getY(ev.findPointerIndex(mActivePointerId));
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                mActivePointerId = INVALID_POINTER;
+                mActivePointerId = -1;
                 if (!mAttached) {
                     onActivePointerUp();
-                    MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
-                    super.dispatchTouchEvent(e);
-                    return true;
+                    ev.setAction(MotionEvent.ACTION_CANCEL);
                 }
                 break;
         }
         return super.dispatchTouchEvent(ev);
-    }
-
-    private float getMotionEventX(MotionEvent event, int pointerId) {
-        int index = event.findPointerIndex(pointerId);
-        if (index < 0) {
-            return INVALID_COORDINATE;
-        }
-        return event.getX(index);
-    }
-
-    private float getMotionEventY(MotionEvent event, int pointerId) {
-        int index = event.findPointerIndex(pointerId);
-        if (index < 0) {
-            return INVALID_COORDINATE;
-        }
-        return event.getY(index);
-    }
-
-    private void onSecondPointerDown(MotionEvent ev) {
-        int pointerIndex = MotionEventCompat.getActionIndex(ev);
-        int pointerId = ev.getPointerId(pointerIndex);
-        if (pointerId != INVALID_POINTER) {
-            mActivePointerId = pointerId;
-        }
-    }
-
-    private void onSecondPointerUp(MotionEvent ev) {
-        int pointerIndex = MotionEventCompat.getActionIndex(ev);
-        int pointerId = ev.getPointerId(pointerIndex);
-        if (pointerId == mActivePointerId) {
-            int newPointerIndex = (pointerIndex == 0 ? 1 : 0);
-            mActivePointerId = ev.getPointerId(newPointerIndex);
-        }
     }
 
     private boolean onCheckCanRefresh() {
