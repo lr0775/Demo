@@ -3,6 +3,7 @@ package cc.stbl.demo.view;
 import android.content.Context;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
+import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -10,6 +11,8 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
+
+import java.util.ArrayList;
 
 import cc.stbl.demo.R;
 
@@ -23,13 +26,6 @@ public class RefreshLayout extends ViewGroup {
 
     private static final int INVALID_COORDINATE = -1;
     private static final int INVALID_POINTER = -1;
-
-    private static final int SETTLE = -3;
-    private static final int BEGIN = -2;
-    private static final int CHILD = -1;
-    private static final int ORIGINAL = 0;
-    private static final int VERTICAL = 1;
-    private static final int HORIZONTAL = 2;
 
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
@@ -55,10 +51,12 @@ public class RefreshLayout extends ViewGroup {
     private float mFirstY;
     private float mLastX;
     private float mLastY;
-    private int mInterceptOrientation;//0--复位，1--垂直，2--水平
+    private boolean mAttached = true;
 
     private Scroller mScroller;
     private int mScrollLastY;
+
+    private ArrayList<InnerPageChangeListener> mListenerList;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -73,6 +71,7 @@ public class RefreshLayout extends ViewGroup {
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mScroller = new Scroller(context, new DecelerateInterpolator());
+        mListenerList = new ArrayList<>();
     }
 
     @Override
@@ -125,6 +124,9 @@ public class RefreshLayout extends ViewGroup {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (isHorizontalScroll()) {
+            return super.dispatchTouchEvent(ev);
+        }
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
@@ -137,8 +139,8 @@ public class RefreshLayout extends ViewGroup {
                 mLastX = mFirstX;
                 mLastY = mFirstY;
                 mScroller.forceFinished(true);
-                if (mTargetView.getTop() == 0 && mInterceptOrientation != SETTLE) {
-                    mInterceptOrientation = BEGIN;
+                if (mTargetView.getTop() == 0) {
+                    mAttached = true;
                 }
                 super.dispatchTouchEvent(ev);
                 return true;
@@ -152,38 +154,35 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (mInterceptOrientation == BEGIN) {
-                    if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) > Math.abs(diffY)) {
-                        mInterceptOrientation = HORIZONTAL;
-                    }
-                }
-                if (mInterceptOrientation == HORIZONTAL) {
-                    return super.dispatchTouchEvent(ev);
-                }
-                if (mInterceptOrientation <= ORIGINAL) {
-                    if (Math.abs(diffY) > mTouchSlop && Math.abs(diffY) > Math.abs(diffX)) {
+                if (mAttached) {
+                    if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
-                                mInterceptOrientation = VERTICAL;
-                            } else {
-                                mInterceptOrientation = CHILD;
+                                mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
-                                mInterceptOrientation = VERTICAL;
-                            } else {
-                                mInterceptOrientation = CHILD;
+                                mAttached = false;
                             }
                         }
                     }
                 }
-                if (mInterceptOrientation == VERTICAL) {
-                    fingerScroll(offsetY);
-                    return true;
-                }
-                if (mInterceptOrientation == ORIGINAL) {
+                if (!mAttached) {
+                    int top = mTargetView.getTop();
+                    float ratio = -0.001f * Math.abs(top) + 1;
+                    int offset = (int) (offsetY * ratio);
+                    float coorY = top + offset;
+                    if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
+                        offset = -top;
+                        mAttached = true;
+                    }
+                    updateScroll(offset);
+                    if (mAttached) {
+                        ev.setAction(MotionEvent.ACTION_DOWN);
+                        return super.dispatchTouchEvent(ev);
+                    }
                     return true;
                 }
             }
@@ -201,10 +200,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (mInterceptOrientation == HORIZONTAL) {
-                    mInterceptOrientation = SETTLE;
-                }
-                if (mInterceptOrientation == VERTICAL || mInterceptOrientation == ORIGINAL) {
+                if (!mAttached) {
                     onActivePointerUp();
                     MotionEvent e = MotionEvent.obtain(ev.getDownTime(), ev.getEventTime() + ViewConfiguration.getLongPressTimeout(), MotionEvent.ACTION_CANCEL, ev.getX(), ev.getY(), ev.getMetaState());
                     super.dispatchTouchEvent(e);
@@ -213,28 +209,6 @@ public class RefreshLayout extends ViewGroup {
                 break;
         }
         return super.dispatchTouchEvent(ev);
-    }
-
-    @Override
-    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-        if (disallowIntercept) {
-            if (mInterceptOrientation == SETTLE) {
-                mInterceptOrientation = HORIZONTAL;
-            }
-        }
-        super.requestDisallowInterceptTouchEvent(disallowIntercept);
-    }
-
-    private void fingerScroll(float offsetY) {
-        int top = mTargetView.getTop();
-        float ratio = -0.001f * Math.abs(top) + 1;
-        int offset = (int) (offsetY * ratio);
-        float y = top + offset;
-        if ((mStatus > 0 && y <= 0) || (mStatus < 0 && y >= 0)) {
-            offset = -top;
-            mInterceptOrientation = ORIGINAL;
-        }
-        updateScroll(offset);
     }
 
     private float getMotionEventX(MotionEvent event, int pointerId) {
@@ -316,6 +290,43 @@ public class RefreshLayout extends ViewGroup {
         }
         mTargetView.offsetTopAndBottom(offset);
         invalidate();
+    }
+
+    public void addViewPagerListener(ViewPager... pagers) {
+        for (ViewPager vp : pagers) {
+            InnerPageChangeListener listener = new InnerPageChangeListener();
+            vp.addOnPageChangeListener(listener);
+            mListenerList.add(listener);
+        }
+    }
+
+    private boolean isHorizontalScroll() {
+        for (InnerPageChangeListener listener : mListenerList) {
+            if (!listener.mIsIdle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static class InnerPageChangeListener implements ViewPager.OnPageChangeListener {
+
+        public boolean mIsIdle = true;
+
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+            mIsIdle = (state == ViewPager.SCROLL_STATE_IDLE);
+        }
     }
 
 }

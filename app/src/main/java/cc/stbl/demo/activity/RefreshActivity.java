@@ -13,9 +13,11 @@ import java.util.Collections;
 import cc.stbl.demo.R;
 import cc.stbl.demo.util.ImageUtils;
 import cc.stbl.demo.util.Toaster;
+import cc.stbl.demo.view.RefreshLayout;
 
 public class RefreshActivity extends BaseActivity {
 
+    private RefreshLayout mRefreshLayout;
     private ViewPager mViewPager;
     private ViewPager mViewPager2;
     private BannerPagerAdapter mAdapter;
@@ -24,6 +26,7 @@ public class RefreshActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_refresh);
+        mRefreshLayout = (RefreshLayout) findViewById(R.id.refresh_layout);
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
         mViewPager2 = (ViewPager) findViewById(R.id.view_pager2);
         ArrayList<String> urlList = new ArrayList<>();
@@ -44,6 +47,7 @@ public class RefreshActivity extends BaseActivity {
                 Toaster.show("点击第" + position + "项");
             }
         });
+        mRefreshLayout.addViewPagerListener(mViewPager, mViewPager2);
     }
 
     public static class BannerPagerAdapter extends PagerAdapter {
