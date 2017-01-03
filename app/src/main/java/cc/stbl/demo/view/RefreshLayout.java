@@ -169,7 +169,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 if (!mAttached) {
                     int top = mTargetView.getTop();
-                    float ratio = -0.001f * Math.abs(top) + 1;
+                    float ratio = -0.002f * Math.abs(top) + 1;
                     int offset = (int) (offsetY * ratio);
                     float coorY = top + offset;
                     if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
