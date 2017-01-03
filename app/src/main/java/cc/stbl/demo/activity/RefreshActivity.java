@@ -26,11 +26,11 @@ public class RefreshActivity extends BaseActivity {
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
         mViewPager2 = (ViewPager) findViewById(R.id.view_pager2);
         ArrayList<String> urlList = new ArrayList<>();
-        urlList.add("http://img1.gamersky.com/image2016/11/20161116_lyx_285_13/gamersky_01origin_01_2016111618178C7.jpg");
-        urlList.add("http://img1.gamersky.com/image2016/11/20161116_lyx_285_13/gamersky_02origin_03_201611161817222.jpg");
-        urlList.add("http://img1.gamersky.com/image2016/12/20161210_zl_91_3/gamersky_01origin_01_201612101716868.jpg");
-        urlList.add("http://img1.gamersky.com/image2016/12/20161210_zl_91_3/gamersky_06origin_11_201612101716587.jpg");
-        urlList.add("http://img1.gamersky.com/image2016/12/20161210_zl_91_3/gamersky_08origin_15_201612101716396.jpg");
+        urlList.add("http://desk.fd.zol-img.com.cn/t_s1920x1080c5/g5/M00/0F/0D/ChMkJ1gyrq2IQiRcAAxu-yQ2xsMAAX8QQM6NvgADG8T113.jpg?downfile=1483427791612.jpg");
+        urlList.add("http://desk.fd.zol-img.com.cn/t_s1920x1080c5/g5/M00/0F/0D/ChMkJ1gyrqOIaPZ0AAl0Kle1WJkAAX8QAFgBIUACXRC781.jpg?downfile=148342783141.jpg");
+        urlList.add("http://desk.fd.zol-img.com.cn/t_s1920x1080c5/g5/M00/0F/0D/ChMkJlgyrqSIVRV6AA1iwnVeVuwAAX8QAI627IADWLa770.jpg?downfile=1483427860251.jpg");
+        urlList.add("http://desk.fd.zol-img.com.cn/t_s1920x1080c5/g5/M00/0F/0D/ChMkJ1gyrqeIYS6YAAqXOO0nxs0AAX8QAOh3y0ACpdQ842.jpg?downfile=148342788792.jpg");
+        urlList.add("http://desk.fd.zol-img.com.cn/t_s1920x1080c5/g5/M00/0F/0D/ChMkJlgyrqqIUs5iAAojZpn5I88AAX8QQIGqBsACiN-149.jpg?downfile=1483427912765.jpg");
         mAdapter = new BannerPagerAdapter(urlList);
         mViewPager.setAdapter(mAdapter);
         ArrayList<String> urlList2 = new ArrayList<>();
