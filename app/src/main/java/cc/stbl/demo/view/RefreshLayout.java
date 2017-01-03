@@ -269,6 +269,11 @@ public class RefreshLayout extends ViewGroup {
 
     private void onActivePointerUp() {
         int top = mTargetView.getTop();
+        if (mStatus > 0) {
+            top -= 120;
+        } else if (mStatus < 0) {
+            top += 120;
+        }
         mScrollLastY = 0;
         mScroller.startScroll(0, 0, 0, -top, 300);
         invalidate();
