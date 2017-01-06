@@ -11,6 +11,8 @@ public class API {
     public static final String LOGIN = "/login";
     public static final String REGISTER = "/register";
 
+    public static final String MEMO = "/memo";
+
     public static final String NOTE = "/user/note";
     public static final String LOGOUT = "/user/logout";
 

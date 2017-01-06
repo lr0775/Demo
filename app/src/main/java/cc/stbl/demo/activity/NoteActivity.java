@@ -5,10 +5,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+
+import com.alibaba.fastjson.JSON;
 
 import cc.stbl.demo.R;
 import cc.stbl.demo.constant.KEY;
 import cc.stbl.demo.model.LoginInfo;
+import cc.stbl.demo.model.Memo;
 import cc.stbl.demo.task.LoginTask;
 import cc.stbl.demo.util.EncryptUtils;
 import cc.stbl.demo.util.Logger;
@@ -23,6 +27,7 @@ public class NoteActivity extends BaseActivity {
     private EditText mPasswordEt;
     private Button mLoginBtn;
     private Button mRegisterBtn;
+    private TextView mResultTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +42,7 @@ public class NoteActivity extends BaseActivity {
         mPasswordEt = (EditText) findViewById(R.id.et_password);
         mLoginBtn = (Button) findViewById(R.id.btn_login);
         mRegisterBtn = (Button) findViewById(R.id.btn_register);
+        mResultTv = (TextView) findViewById(R.id.tv_result);
 
         mLoginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -48,6 +54,12 @@ public class NoteActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 register();
+            }
+        });
+        findViewById(R.id.btn_create_memo).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createMemo();
             }
         });
     }
@@ -120,6 +132,32 @@ public class NoteActivity extends BaseActivity {
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PHONE, result.user.phone);
                         SharedPrefUtils.putToPublicFile(KEY.LOGINED_PASSWORD, passEncrypt);
                         startActivity(new Intent(mActivity, NoteListActivity.class));
+                    }
+                }));
+    }
+
+    private void createMemo() {
+        String accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0ODM3NTUyMzksInBob25lIjoiMTM2MzIzODUyODIiLCJ1aWQiOjF9.n_8fCxzhXxwF8q8WZNYbwsRtkbiO8O48aZPFB00ULKA";
+        SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, accessToken);
+        String title = "希望今年发财";
+        String content = "去年都没赚到钱， 希望今年发财！";
+        mTaskManager.start(LoginTask.createMemo(title, content)
+                .setCallback(new TaskCallback<Memo>() {
+
+                    @Override
+                    public void onFinish() {
+                        mRegisterBtn.setEnabled(true);
+                    }
+
+                    @Override
+                    public void onError(TaskError e) {
+                        Toaster.show(e.msg);
+                    }
+
+                    @Override
+                    public void onSuccess(Memo result) {
+                        Toaster.show("创建成功");
+                        mResultTv.setText(JSON.toJSONString(result));
                     }
                 }));
     }

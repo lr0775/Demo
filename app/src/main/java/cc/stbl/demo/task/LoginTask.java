@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import cc.stbl.demo.constant.API;
 import cc.stbl.demo.model.LoginInfo;
+import cc.stbl.demo.model.Memo;
 import cc.stbl.demo.util.OkHttpHelper;
 import cc.stbl.demo.weapon.HttpResponse;
 import cc.stbl.demo.weapon.Task;
@@ -58,6 +59,33 @@ public class LoginTask {
                         return;
                     }
                     LoginInfo data = JSON.parseObject(response.result, LoginInfo.class);
+                    if (data == null) {
+                        onError("JSONError");
+                        return;
+                    }
+                    onSuccess(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    onError(e);
+                }
+            }
+        };
+    }
+
+    public static Task<Memo> createMemo(final String title, final String content) {
+        return new Task<Memo>() {
+            @Override
+            protected void call() {
+                JSONObject json = new JSONObject();
+                json.put("title", title);
+                json.put("content", content);
+                try {
+                    HttpResponse response = OkHttpHelper.getInstance().post(API.MEMO, json);
+                    if (response.error != null) {
+                        onError(response.error);
+                        return;
+                    }
+                    Memo data = JSON.parseObject(response.result, Memo.class);
                     if (data == null) {
                         onError("JSONError");
                         return;
