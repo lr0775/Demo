@@ -176,7 +176,8 @@ public class NoteActivity extends BaseActivity {
 
     private void uploadImage() {
         SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, accessToken);
-        File file = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "DCIM/Camera", "IMG_20170110_033852.jpg");
+        //File file = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "DCIM/Camera", "IMG_20170110_033852.jpg");
+        File file = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "Download", "girl.gif");
         mTaskManager.start(LoginTask.uploadImage(file)
                 .setCallback(new TaskCallback<String>() {
 
