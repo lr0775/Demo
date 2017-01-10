@@ -3,6 +3,7 @@ package cc.stbl.demo.task;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 
 import cc.stbl.demo.constant.API;
@@ -91,6 +92,25 @@ public class LoginTask {
                         return;
                     }
                     onSuccess(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    onError(e);
+                }
+            }
+        };
+    }
+
+    public static Task<String> uploadImage(final File file) {
+        return new Task<String>() {
+            @Override
+            protected void call() {
+                try {
+                    HttpResponse response = OkHttpHelper.getInstance().uploadImage(API.FILE, file);
+                    if (response.error != null) {
+                        onError(response.error);
+                        return;
+                    }
+                    onSuccess(response.result);
                 } catch (IOException e) {
                     e.printStackTrace();
                     onError(e);

@@ -6,12 +6,13 @@ package cc.stbl.demo.constant;
 
 public class API {
 
-    public static final String HOST = "http://192.168.1.141";
+    public static final String HOST = "http://192.168.2.7";
 
     public static final String LOGIN = "/login";
     public static final String REGISTER = "/register";
 
     public static final String MEMO = "/memo";
+    public static final String FILE = "/file";
 
     public static final String NOTE = "/user/note";
     public static final String LOGOUT = "/user/logout";

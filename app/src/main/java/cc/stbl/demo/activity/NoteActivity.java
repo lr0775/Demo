@@ -2,12 +2,15 @@ package cc.stbl.demo.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
+
+import java.io.File;
 
 import cc.stbl.demo.R;
 import cc.stbl.demo.constant.KEY;
@@ -16,12 +19,15 @@ import cc.stbl.demo.model.Memo;
 import cc.stbl.demo.task.LoginTask;
 import cc.stbl.demo.util.EncryptUtils;
 import cc.stbl.demo.util.Logger;
+import cc.stbl.demo.util.PermissionUtils;
 import cc.stbl.demo.util.SharedPrefUtils;
 import cc.stbl.demo.util.Toaster;
 import cc.stbl.demo.weapon.TaskCallback;
 import cc.stbl.demo.weapon.TaskError;
 
 public class NoteActivity extends BaseActivity {
+
+    static final String accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0ODQwMjg1NDYsInBob25lIjoiMTM2MzIzODUyODIiLCJ1aWQiOjF9.4kdR24vw-iPNAuZSzfTyBxGYFXcZ5lPTVgNIDHerjGU";
 
     private EditText mPhoneEt;
     private EditText mPasswordEt;
@@ -35,6 +41,7 @@ public class NoteActivity extends BaseActivity {
         setContentView(R.layout.activity_note);
 
         initView();
+        PermissionUtils.verifyStoragePermissions(mActivity);
     }
 
     private void initView() {
@@ -60,6 +67,12 @@ public class NoteActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 createMemo();
+            }
+        });
+        findViewById(R.id.btn_upload_image).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                uploadImage();
             }
         });
     }
@@ -137,7 +150,6 @@ public class NoteActivity extends BaseActivity {
     }
 
     private void createMemo() {
-        String accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0ODM3NTUyMzksInBob25lIjoiMTM2MzIzODUyODIiLCJ1aWQiOjF9.n_8fCxzhXxwF8q8WZNYbwsRtkbiO8O48aZPFB00ULKA";
         SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, accessToken);
         String title = "希望今年发财";
         String content = "去年都没赚到钱， 希望今年发财！";
@@ -157,6 +169,30 @@ public class NoteActivity extends BaseActivity {
                     @Override
                     public void onSuccess(Memo result) {
                         Toaster.show("创建成功");
+                        mResultTv.setText(JSON.toJSONString(result));
+                    }
+                }));
+    }
+
+    private void uploadImage() {
+        SharedPrefUtils.putToPublicFile(KEY.ACCESS_TOKEN, accessToken);
+        File file = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "DCIM/Camera", "IMG_20170110_033852.jpg");
+        mTaskManager.start(LoginTask.uploadImage(file)
+                .setCallback(new TaskCallback<String>() {
+
+                    @Override
+                    public void onFinish() {
+                        mRegisterBtn.setEnabled(true);
+                    }
+
+                    @Override
+                    public void onError(TaskError e) {
+                        Toaster.show(e.msg);
+                    }
+
+                    @Override
+                    public void onSuccess(String result) {
+                        Toaster.show("上传成功");
                         mResultTv.setText(JSON.toJSONString(result));
                     }
                 }));

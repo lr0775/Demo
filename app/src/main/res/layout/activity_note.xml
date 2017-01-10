@@ -42,6 +42,12 @@
         android:layout_height="wrap_content"
         android:text="创建备忘录" />
 
+    <Button
+        android:id="@+id/btn_upload_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="上传图片" />
+
     <TextView
         android:id="@+id/tv_result"
         android:layout_width="match_parent"

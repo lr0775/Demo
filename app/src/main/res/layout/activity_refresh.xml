@@ -11,20 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <cc.stbl.demo.view.refresh.SwipeRefreshHeaderLayout
-            android:id="@id/swipe_refresh_header"
+        <cc.stbl.demo.view.RefreshHeaderView
+            android:id="@id/refresh_header_view"
             android:layout_width="match_parent"
-            android:layout_height="60dp">
-
-            <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center" />
-
-        </cc.stbl.demo.view.refresh.SwipeRefreshHeaderLayout>
+            android:layout_height="wrap_content" />
 
         <ScrollView
-            android:id="@id/swipe_target"
+            android:id="@id/content_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -53,17 +46,10 @@
 
         </ScrollView>
 
-        <cc.stbl.demo.view.refresh.SwipeLoadMoreFooterLayout
-            android:id="@id/swipe_load_more_footer"
+        <cc.stbl.demo.view.LoadMoreFooterView
+            android:id="@id/load_more_footer_view"
             android:layout_width="match_parent"
-            android:layout_height="60dp">
-
-            <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center" />
-
-        </cc.stbl.demo.view.refresh.SwipeLoadMoreFooterLayout>
+            android:layout_height="wrap_content" />
 
     </cc.stbl.demo.view.RefreshLayout>
 
