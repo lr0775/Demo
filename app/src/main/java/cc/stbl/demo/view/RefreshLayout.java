@@ -28,16 +28,13 @@ public class RefreshLayout extends ViewGroup {
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
 
-    private OnRefreshListener mRefreshListener;
-    private OnLoadMoreListener mLoadMoreListener;
-
     private int mStatus;
 
     private int mTouchSlop;
 
-    private Callback mHeaderView;
+    private View mHeaderView;
     private View mContentView;
-    private Callback mFooterView;
+    private View mFooterView;
 
     private int mLayoutHeight;
     private int mHeaderWidth;
@@ -82,9 +79,9 @@ public class RefreshLayout extends ViewGroup {
         if (childCount == 0) {
             return;
         }
-        mHeaderView = (Callback) findViewById(R.id.refresh_header_view);
+        mHeaderView = findViewById(R.id.refresh_header_view);
         mContentView = findViewById(R.id.content_view);
-        mFooterView = (Callback) findViewById(R.id.load_more_footer_view);
+        mFooterView = findViewById(R.id.load_more_footer_view);
     }
 
     @Override
@@ -95,17 +92,17 @@ public class RefreshLayout extends ViewGroup {
         }
         mLayoutHeight = getMeasuredHeight();
         if (mHeaderView != null) {
-            measureChild(mHeaderView.getView(), widthMeasureSpec, heightMeasureSpec);
-            mHeaderWidth = mHeaderView.getView().getMeasuredWidth();
-            mHeaderHeight = mHeaderView.getView().getMeasuredHeight();
+            measureChild(mHeaderView, widthMeasureSpec, heightMeasureSpec);
+            mHeaderWidth = mHeaderView.getMeasuredWidth();
+            mHeaderHeight = mHeaderView.getMeasuredHeight();
         }
         measureChild(mContentView, widthMeasureSpec, heightMeasureSpec);
         mTargetWidth = mContentView.getMeasuredWidth();
         mTargetHeight = mContentView.getMeasuredHeight();
         if (mFooterView != null) {
-            measureChild(mFooterView.getView(), widthMeasureSpec, heightMeasureSpec);
-            mFooterWidth = mFooterView.getView().getMeasuredWidth();
-            mFooterHeight = mFooterView.getView().getMeasuredHeight();
+            measureChild(mFooterView, widthMeasureSpec, heightMeasureSpec);
+            mFooterWidth = mFooterView.getMeasuredWidth();
+            mFooterHeight = mFooterView.getMeasuredHeight();
         }
     }
 
@@ -115,11 +112,11 @@ public class RefreshLayout extends ViewGroup {
             return;
         }
         if (mHeaderView != null) {
-            mHeaderView.getView().layout(0, -mHeaderHeight, mHeaderWidth, 0);
+            mHeaderView.layout(0, -mHeaderHeight, mHeaderWidth, 0);
         }
         mContentView.layout(0, 0, mTargetWidth, mTargetHeight);
         if (mFooterView != null) {
-            mFooterView.getView().layout(0, mLayoutHeight, mFooterWidth, mLayoutHeight + mFooterHeight);
+            mFooterView.layout(0, mLayoutHeight, mFooterWidth, mLayoutHeight + mFooterHeight);
         }
     }
 
@@ -161,24 +158,17 @@ public class RefreshLayout extends ViewGroup {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
                                 mAttached = false;
-                                mHeaderView.onPrepare();
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
                                 mStatus = -1;
                                 mAttached = false;
-                                mFooterView.onPrepare();
                             }
                         }
                     }
                 }
                 if (!mAttached) {
                     int top = mContentView.getTop();
-                    if (mStatus > 0) {
-                        mHeaderView.onDrag(top);
-                    } else if (mStatus < 0) {
-                        mFooterView.onDrag(-top);
-                    }
                     float ratio = -0.002f * Math.abs(top) + 1;
                     int offset = (int) (offsetY * ratio);
                     float coorY = top + offset;
@@ -279,16 +269,10 @@ public class RefreshLayout extends ViewGroup {
 
     private void onActivePointerUp() {
         int top = mContentView.getTop();
-        if (mStatus > 0) {
-            mHeaderView.onRelease();
-            if (top > mHeaderView.getTriggerHeight()) {
-                top -= mHeaderView.getTriggerHeight();
-            }
-        } else if (mStatus < 0) {
-            mFooterView.onRelease();
-            if (top < -mFooterView.getTriggerHeight()) {
-                top += mFooterView.getTriggerHeight();
-            }
+        if (mStatus > 0 && top > 120) {
+            top -= 120;
+        } else if (mStatus < 0 && top < -120) {
+            top += 120;
         }
         mScrollLastY = 0;
         mScroller.startScroll(0, 0, 0, -top, 300);
@@ -305,32 +289,16 @@ public class RefreshLayout extends ViewGroup {
         int offset = currY - mScrollLastY;
         mScrollLastY = currY;
         updateScroll(offset);
-        if (mStatus > 0 && mContentView.getTop() == mHeaderView.getTriggerHeight()) {
-            if (mRefreshListener != null) {
-                mRefreshListener.onRefresh();
-            }
-        } else if (mStatus < 0 && mContentView.getTop() == -mFooterView.getTriggerHeight()) {
-            if (mLoadMoreListener != null) {
-                mLoadMoreListener.onLoadMore();
-            }
-        }
     }
 
     private void updateScroll(int offset) {
         if (mStatus > 0) {
-            mHeaderView.getView().offsetTopAndBottom(offset);
+            mHeaderView.offsetTopAndBottom(offset);
         } else if (mStatus < 0) {
-            mFooterView.getView().offsetTopAndBottom(offset);
+            mFooterView.offsetTopAndBottom(offset);
         }
         mContentView.offsetTopAndBottom(offset);
         invalidate();
-        if (mContentView.getTop() == 0) {
-            if (mStatus > 0) {
-                mHeaderView.onReset();
-            } else if (mStatus < 0) {
-                mFooterView.onReset();
-            }
-        }
     }
 
     private boolean isHorizontalScroll() {
@@ -344,69 +312,6 @@ public class RefreshLayout extends ViewGroup {
 
     public void setVeritcalScrollEnabled(int key, boolean enabled) {
         mHorizontalMap.put(key, enabled);
-    }
-
-    public void setOnRefreshListener(OnRefreshListener listener) {
-        mRefreshListener = listener;
-    }
-
-    public void setOnLoadMoreListener(OnLoadMoreListener listener) {
-        mLoadMoreListener = listener;
-    }
-
-    public void autoRefresh() {
-        mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, 120, 300);
-        invalidate();
-    }
-
-    public void completeRefresh() {
-        mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, -120, 300);
-        invalidate();
-    }
-
-    //--------------外部要实现的接口----------------------------------------------------------------------------------
-
-    public void autoLoadMore() {
-        mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, -120, 300);
-        invalidate();
-    }
-
-    //---------------外部调用方法------------------------------------------------------------------------
-
-    public void completeLoadMore() {
-
-
-        mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, 120, 300);
-        invalidate();
-    }
-
-    public interface OnRefreshListener {
-        void onRefresh();
-    }
-
-    public interface OnLoadMoreListener {
-        void onLoadMore();
-    }
-
-    public interface Callback {
-
-        View getView();
-
-        int getTriggerHeight();
-
-        void onPrepare();
-
-        void onDrag(int y);
-
-        void onRelease();
-
-        void onComplete();
-
-        void onReset();
     }
 
 }

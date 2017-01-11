@@ -27,7 +27,7 @@ import cc.stbl.demo.weapon.TaskError;
 
 public class NoteActivity extends BaseActivity {
 
-    static final String accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0ODQwMjg1NDYsInBob25lIjoiMTM2MzIzODUyODIiLCJ1aWQiOjF9.4kdR24vw-iPNAuZSzfTyBxGYFXcZ5lPTVgNIDHerjGU";
+    static final String accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0ODQxMTU2MzIsInBob25lIjoiMTM2MzIzODUyODIiLCJ1aWQiOjF9.qCHedkd5nsNMkfYtErX4lkP72bERsgrj8i96zuzgtjQ";
 
     private EditText mPhoneEt;
     private EditText mPasswordEt;
