@@ -28,6 +28,9 @@ public class RefreshLayout extends ViewGroup {
     private boolean mRefreshEnabled = true;
     private boolean mLoadMoreEnabled = true;
 
+    private OnRefreshListener mRefreshListener;
+    private OnLoadMoreListener mLoadMoreListener;
+
     private int mStatus;
 
     private int mTouchSlop;
@@ -51,10 +54,8 @@ public class RefreshLayout extends ViewGroup {
     private float mLastY;
     private boolean mAttached = true;
 
+    private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
-
-    private Scroller mScroller;
-    private int mScrollLastY;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -68,7 +69,7 @@ public class RefreshLayout extends ViewGroup {
         super(context, attrs, defStyleAttr);
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        mScroller = new Scroller(context, new DecelerateInterpolator());
+        mAutoScroller = new AutoScroller(context);
         mHorizontalMap = new SparseBooleanArray();
     }
 
@@ -136,7 +137,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
-                mScroller.forceFinished(true);
+                mAutoScroller.forceFinished();
                 if (mContentView.getTop() == 0) {
                     mAttached = true;
                 }
@@ -169,7 +170,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 if (!mAttached) {
                     int top = mContentView.getTop();
-                    float ratio = -0.002f * Math.abs(top) + 1;
+                    float ratio = -0.0015f * Math.abs(top) + 1;
                     int offset = (int) (offsetY * ratio);
                     float coorY = top + offset;
                     if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
@@ -205,7 +206,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
                 if (!mAttached) {
-                    onActivePointerUp();
+                    mAutoScroller.onActivePointerUp();
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     super.dispatchTouchEvent(ev);
                     return true;
@@ -267,28 +268,10 @@ public class RefreshLayout extends ViewGroup {
         return mLoadMoreEnabled && !ViewCompat.canScrollVertically(mContentView, 1);
     }
 
-    private void onActivePointerUp() {
-        int top = mContentView.getTop();
-        if (mStatus > 0 && top > 120) {
-            top -= 120;
-        } else if (mStatus < 0 && top < -120) {
-            top += 120;
-        }
-        mScrollLastY = 0;
-        mScroller.startScroll(0, 0, 0, -top, 300);
-        invalidate();
-    }
-
     @Override
     public void computeScroll() {
         super.computeScroll();
-        if (!mScroller.computeScrollOffset()) {
-            return;
-        }
-        int currY = mScroller.getCurrY();
-        int offset = currY - mScrollLastY;
-        mScrollLastY = currY;
-        updateScroll(offset);
+        //用Runnable代替，因为在computeScroll方法里面textView.setText无效
     }
 
     private void updateScroll(int offset) {
@@ -298,7 +281,6 @@ public class RefreshLayout extends ViewGroup {
             mFooterView.offsetTopAndBottom(offset);
         }
         mContentView.offsetTopAndBottom(offset);
-        invalidate();
     }
 
     private boolean isHorizontalScroll() {
@@ -312,6 +294,75 @@ public class RefreshLayout extends ViewGroup {
 
     public void setVeritcalScrollEnabled(int key, boolean enabled) {
         mHorizontalMap.put(key, enabled);
+    }
+
+    public void setOnRefreshListener(OnRefreshListener listener) {
+        mRefreshListener = listener;
+    }
+
+    public void setOnLoadMoreListener(OnLoadMoreListener listener) {
+        mLoadMoreListener = listener;
+    }
+
+    public interface OnRefreshListener {
+        void onRefresh();
+    }
+
+    public interface OnLoadMoreListener {
+        void onLoadMore();
+    }
+
+    private class AutoScroller implements Runnable {
+
+        private Scroller mScroller;
+        private int mScrollLastY;
+
+        public AutoScroller(Context context) {
+            mScroller = new Scroller(context, new DecelerateInterpolator());
+        }
+
+        public void forceFinished() {
+            mScroller.forceFinished(true);
+        }
+
+        public void onActivePointerUp() {
+            int top = mContentView.getTop();
+            if (mStatus > 0 && top > 120) {
+                top -= 120;
+            } else if (mStatus < 0 && top < -120) {
+                top += 120;
+            }
+            mScrollLastY = 0;
+            mScroller.startScroll(0, 0, 0, -top, 300);
+            post(this);
+        }
+
+        public void completeLoadMore() {
+            mScrollLastY = 0;
+            mScroller.startScroll(0, 0, 0, 120, 300);
+            post(this);
+        }
+
+        @Override
+        public void run() {
+            if (!mScroller.computeScrollOffset()) {
+                return;
+            }
+            int currY = mScroller.getCurrY();
+            int offset = currY - mScrollLastY;
+            mScrollLastY = currY;
+            updateScroll(offset);
+            if (mStatus > 0 && mContentView.getTop() == 120) {
+                if (mRefreshListener != null) {
+                    mRefreshListener.onRefresh();
+                }
+            } else if (mStatus < 0 && (mContentView.getTop() == -120f)) {
+                if (mLoadMoreListener != null) {
+                    mLoadMoreListener.onLoadMore();
+                }
+            }
+            post(this);
+        }
     }
 
 }

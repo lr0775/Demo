@@ -54,12 +54,15 @@ public class MainActivity extends BaseActivity {
                         startActivity(new Intent(mActivity, RefreshActivity.class));
                         break;
                     case 4:
-                        startActivity(new Intent(mActivity, SwipeActivity.class));
+                        startActivity(new Intent(mActivity, RefreshListViewActivity.class));
                         break;
                     case 5:
-                        startActivity(new Intent(mActivity, UltraPullActivity.class));
+                        startActivity(new Intent(mActivity, SwipeActivity.class));
                         break;
                     case 6:
+                        startActivity(new Intent(mActivity, UltraPullActivity.class));
+                        break;
+                    case 7:
                         startActivity(new Intent(mActivity, SystemActivity.class));
                         break;
                 }
@@ -72,6 +75,7 @@ public class MainActivity extends BaseActivity {
         mList.add("SampleSize");
         mList.add("Note");
         mList.add("Refresh");
+        mList.add("Refresh_ListView");
         mList.add("Swipe");
         mList.add("Ultra");
         mList.add("System");
