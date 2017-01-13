@@ -21,7 +21,7 @@ public class SwipeRefreshActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_refresh);
+        setContentView(R.layout.activity_swipe_refresh);
         mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh_layout);
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
         mViewPager2 = (ViewPager) findViewById(R.id.view_pager2);
@@ -41,6 +41,17 @@ public class SwipeRefreshActivity extends BaseActivity {
             @Override
             public void onItemClick(int position) {
                 Toaster.show("点击第" + position + "项");
+            }
+        });
+        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.setRefreshing(false);
+                    }
+                }, 100);
             }
         });
     }
