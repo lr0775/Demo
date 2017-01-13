@@ -13,7 +13,6 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
-import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
@@ -130,7 +129,6 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                Logger.e("ACTION_DOWN, " + System.currentTimeMillis());
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -329,7 +327,6 @@ public class RefreshLayout extends ViewGroup {
         }
 
         public void onActionUp(int dy, int duration) {
-            Logger.e("onActivePointerUp, " + System.currentTimeMillis());
             mScrollLastY = 0;
             mScroller.startScroll(0, 0, 0, dy, duration);
             post(this);
