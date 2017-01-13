@@ -13,6 +13,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
+import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
@@ -69,7 +70,7 @@ public class RefreshLayout extends ViewGroup {
         super(context, attrs, defStyleAttr);
 
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        mAutoScroller = new AutoScroller(context);
+        mAutoScroller = new AutoScroller();
         mHorizontalMap = new SparseBooleanArray();
     }
 
@@ -129,6 +130,7 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                Logger.e("ACTION_DOWN, " + System.currentTimeMillis());
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -137,7 +139,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
-                mAutoScroller.forceFinished();
+                mAutoScroller.onActionDown();
                 if (mContentView.getTop() == 0) {
                     mAttached = true;
                 }
@@ -170,7 +172,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 if (!mAttached) {
                     int top = mContentView.getTop();
-                    float ratio = -0.0015f * Math.abs(top) + 1;
+                    float ratio = -0.0010f * Math.abs(top) + 1;
                     int offset = (int) (offsetY * ratio);
                     float coorY = top + offset;
                     if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
@@ -206,7 +208,8 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
                 if (!mAttached) {
-                    mAutoScroller.onActivePointerUp();
+                    int top = mContentView.getTop();
+                    mAutoScroller.onActionUp(-top, 250);
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     super.dispatchTouchEvent(ev);
                     return true;
@@ -317,29 +320,15 @@ public class RefreshLayout extends ViewGroup {
         private Scroller mScroller;
         private int mScrollLastY;
 
-        public AutoScroller(Context context) {
-            mScroller = new Scroller(context, new DecelerateInterpolator());
+        public void onActionDown() {
+            removeCallbacks(this);
         }
 
-        public void forceFinished() {
-            mScroller.forceFinished(true);
-        }
-
-        public void onActivePointerUp() {
-            int top = mContentView.getTop();
-            if (mStatus > 0 && top > 120) {
-                top -= 120;
-            } else if (mStatus < 0 && top < -120) {
-                top += 120;
-            }
+        public void onActionUp(int dy, int duration) {
+            Logger.e("onActivePointerUp, " + System.currentTimeMillis());
             mScrollLastY = 0;
-            mScroller.startScroll(0, 0, 0, -top, 300);
-            post(this);
-        }
-
-        public void completeLoadMore() {
-            mScrollLastY = 0;
-            mScroller.startScroll(0, 0, 0, 120, 300);
+            mScroller = new Scroller(getContext(), new DecelerateInterpolator());
+            mScroller.startScroll(0, 0, 0, dy, duration);
             post(this);
         }
 
@@ -352,15 +341,6 @@ public class RefreshLayout extends ViewGroup {
             int offset = currY - mScrollLastY;
             mScrollLastY = currY;
             updateScroll(offset);
-            if (mStatus > 0 && mContentView.getTop() == 120) {
-                if (mRefreshListener != null) {
-                    mRefreshListener.onRefresh();
-                }
-            } else if (mStatus < 0 && (mContentView.getTop() == -120f)) {
-                if (mLoadMoreListener != null) {
-                    mLoadMoreListener.onLoadMore();
-                }
-            }
             post(this);
         }
     }
