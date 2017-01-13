@@ -320,6 +320,10 @@ public class RefreshLayout extends ViewGroup {
         private Scroller mScroller;
         private int mScrollLastY;
 
+        public AutoScroller() {
+            mScroller = new Scroller(getContext(), new DecelerateInterpolator());
+        }
+
         public void onActionDown() {
             removeCallbacks(this);
         }
@@ -327,7 +331,6 @@ public class RefreshLayout extends ViewGroup {
         public void onActionUp(int dy, int duration) {
             Logger.e("onActivePointerUp, " + System.currentTimeMillis());
             mScrollLastY = 0;
-            mScroller = new Scroller(getContext(), new DecelerateInterpolator());
             mScroller.startScroll(0, 0, 0, dy, duration);
             post(this);
         }
