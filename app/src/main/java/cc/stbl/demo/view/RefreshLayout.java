@@ -305,6 +305,14 @@ public class RefreshLayout extends ViewGroup {
         mLoadMoreListener = listener;
     }
 
+    private void autoScrollFinished() {
+        if (mRefreshListener != null && mStatus > 0 && mContentView.getTop() > 0) {
+            mRefreshListener.onRefresh();
+        } else if (mLoadMoreListener != null && mStatus < 0 && mContentView.getTop() < 0) {
+            mLoadMoreListener.onLoadMore();
+        }
+    }
+
     public interface OnRefreshListener {
         void onRefresh();
     }
@@ -335,6 +343,7 @@ public class RefreshLayout extends ViewGroup {
         @Override
         public void run() {
             if (!mScroller.computeScrollOffset()) {
+                autoScrollFinished();
                 return;
             }
             int currY = mScroller.getCurrY();

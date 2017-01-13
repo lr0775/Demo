@@ -8,6 +8,7 @@ import java.util.Collections;
 
 import cc.stbl.demo.R;
 import cc.stbl.demo.adapter.BannerPagerAdapter;
+import cc.stbl.demo.util.Logger;
 import cc.stbl.demo.util.Toaster;
 import cc.stbl.demo.view.RefreshLayout;
 
@@ -73,6 +74,20 @@ public class RefreshActivity extends BaseActivity {
             @Override
             public void onPageScrollStateChanged(int state) {
                 mRefreshLayout.setVeritcalScrollEnabled(2, state == ViewPager.SCROLL_STATE_IDLE);
+            }
+        });
+
+        mRefreshLayout.setOnRefreshListener(new RefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                Logger.e("onRefresh");
+            }
+        });
+
+        mRefreshLayout.setOnLoadMoreListener(new RefreshLayout.OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                Logger.e("onLoadMore");
             }
         });
     }
