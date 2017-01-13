@@ -42,6 +42,9 @@
         <activity
             android:name=".activity.RefreshListViewActivity"
             android:theme="@style/NoActionBar" />
+        <activity
+            android:name=".activity.SwipeRefreshActivity"
+            android:theme="@style/NoActionBar" />
     </application>
 
 </manifest>

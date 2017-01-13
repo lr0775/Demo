@@ -28,7 +28,7 @@ public class MainActivity extends BaseActivity {
 
     private void initView() {
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        //mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setHasFixedSize(true);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
         mList = new ArrayList<>();
@@ -65,6 +65,9 @@ public class MainActivity extends BaseActivity {
                     case 7:
                         startActivity(new Intent(mActivity, SystemActivity.class));
                         break;
+                    case 8:
+                        startActivity(new Intent(mActivity, SwipeRefreshActivity.class));
+                        break;
                 }
             }
         });
@@ -79,5 +82,6 @@ public class MainActivity extends BaseActivity {
         mList.add("Swipe");
         mList.add("Ultra");
         mList.add("System");
+        mList.add("SwipeRefreshLayout");
     }
 }
