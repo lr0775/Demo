@@ -104,6 +104,12 @@ public class RefreshListViewActivity extends BaseActivity {
             @Override
             public void onRefresh() {
                 Logger.e("onRefresh");
+                mRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.completeRefresh();
+                    }
+                }, 2000);
             }
         });
 
