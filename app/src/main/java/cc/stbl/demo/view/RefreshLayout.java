@@ -31,6 +31,9 @@ public class RefreshLayout extends ViewGroup {
     private OnRefreshListener mRefreshListener;
     private OnLoadMoreListener mLoadMoreListener;
 
+    private int mTrigger;
+    private boolean mHandling;
+
     private int mStatus;
 
     private int mTouchSlop;
@@ -202,12 +205,22 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (!mAttached) {
+                if (!mAttached && !mHandling) {
                     int top = mContentView.getTop();
-                    if (mStatus > 0 && top > mHeaderHeight) {
-                        top -= mHeaderHeight;
-                    } else if (mStatus < 0 && top < -mHeaderHeight) {
-                        top += mHeaderHeight;
+                    if (mStatus > 0) {
+                        if (top > mHeaderHeight) {
+                            mTrigger = 1;
+                            top -= mHeaderHeight;
+                        } else {
+                            mTrigger = 0;
+                        }
+                    } else if (mStatus < 0) {
+                        if (top < -mHeaderHeight) {
+                            mTrigger = -1;
+                            top += mHeaderHeight;
+                        } else {
+                            mTrigger = 0;
+                        }
                     }
                     mAutoScroller.onActionUp(-top, 250);
                     ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -336,11 +349,20 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void autoScrollFinished() {
-        if (mRefreshListener != null && mStatus > 0 && mContentView.getTop() > 0) {
-            mRefreshListener.onRefresh();
-        } else if (mLoadMoreListener != null && mStatus < 0 && mContentView.getTop() < 0) {
-            mLoadMoreListener.onLoadMore();
+        if (mTrigger > 0) {
+            mHandling = true;
+            if (mRefreshListener != null) {
+                mRefreshListener.onRefresh();
+            }
+        } else if (mTrigger < 0) {
+            mHandling = true;
+            if (mLoadMoreListener != null) {
+                mLoadMoreListener.onLoadMore();
+            }
+        } else if (mTrigger == 0) {
+            mHandling = false;
         }
+        mTrigger = 0;
     }
 
     public void completeRefresh() {

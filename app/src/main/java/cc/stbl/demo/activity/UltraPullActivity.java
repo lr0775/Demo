@@ -2,8 +2,10 @@ package cc.stbl.demo.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import cc.stbl.demo.R;
+import cc.stbl.demo.util.Toaster;
 import in.srain.cube.views.ptr.PtrDefaultHandler;
 import in.srain.cube.views.ptr.PtrFrameLayout;
 
@@ -26,6 +28,13 @@ public class UltraPullActivity extends AppCompatActivity {
                         mPtrLayout.refreshComplete();
                     }
                 }, 5000);
+            }
+        });
+
+        findViewById(R.id.tv1).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toaster.show("点击了第一项");
             }
         });
     }
