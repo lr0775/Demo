@@ -32,8 +32,17 @@ public class RefreshLayout extends ViewGroup {
     private OnLoadMoreListener mLoadMoreListener;
 
     private int mStatus;
-    private int mHandlingStatus; //刷新中或者加载中的状态，由用户手势触发，要么用代码结束，要么把刷新头滑动隐藏
-    private int mTop;
+
+    /**
+     * 刷新中或者加载中的状态，由用户手势触发，要么用代码结束这个状态，要么把刷新头滑动隐藏结束这个状态，
+     * 这个状态并不代表top一定等于刷新头的高度，top只要大于0就可以了, top等于0代表结束了刷新中的状态，不回调OnRefreshListener。
+     */
+    private int mHandlingStatus;
+
+    /**
+     * 是否可以触发mContentView的子View的点击事件
+     */
+    private boolean mTrigger;
 
     private int mTouchSlop;
 
@@ -55,7 +64,6 @@ public class RefreshLayout extends ViewGroup {
     private float mLastX;
     private float mLastY;
     private boolean mAttached = true;
-    private boolean mFingerScrolled;
 
     private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
@@ -115,12 +123,13 @@ public class RefreshLayout extends ViewGroup {
         if (mContentView == null) {
             return;
         }
+        int top = mContentView.getTop();
         if (mHeaderView != null) {
-            mHeaderView.layout(0, mTop - mHeaderHeight, mHeaderWidth, mTop);
+            mHeaderView.layout(0, top - mHeaderHeight, mHeaderWidth, top);
         }
-        mContentView.layout(0, mTop, mTargetWidth, mTargetHeight + mTop);
+        mContentView.layout(0, top, mTargetWidth, mTargetHeight + top);
         if (mFooterView != null) {
-            mFooterView.layout(0, mLayoutHeight + mTop, mFooterWidth, mLayoutHeight + mTop + mFooterHeight);
+            mFooterView.layout(0, mLayoutHeight + top, mFooterWidth, mLayoutHeight + top + mFooterHeight);
         }
     }
 
@@ -140,7 +149,6 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
-                mFingerScrolled = false;
                 mAutoScroller.onActionDown();
                 super.dispatchTouchEvent(ev);
                 return true;
@@ -156,7 +164,6 @@ public class RefreshLayout extends ViewGroup {
                 mLastY = y;
                 if (mAttached) {
                     if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
-                        mFingerScrolled = true;
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
@@ -171,28 +178,25 @@ public class RefreshLayout extends ViewGroup {
                     }
                 }
                 if (!mAttached) {
-                    if (!mFingerScrolled) {
-                        if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
-                            mFingerScrolled = true;
-                        }
+                    if (mTrigger && !(Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY))))) {
+                        return super.dispatchTouchEvent(ev);
                     }
-                    if (mFingerScrolled) {
-                        int top = mContentView.getTop();
-                        float ratio = -0.0010f * Math.abs(top) + 1;
-                        int offset = (int) (offsetY * ratio);
-                        float coorY = top + offset;
-                        if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
-                            offset = -top;
-                            mAttached = true;
-                            mHandlingStatus = 0;
-                        }
-                        updateScroll(offset);
-                        if (mAttached) {
-                            ev.setAction(MotionEvent.ACTION_DOWN);
-                            return super.dispatchTouchEvent(ev);
-                        }
-                        return true;
+                    int top = mContentView.getTop();
+                    float ratio = -0.0010f * Math.abs(top) + 1;
+                    int offset = (int) (offsetY * ratio);
+                    float coorY = top + offset;
+                    if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
+                        offset = -top;
+                        mAttached = true;
+                        mHandlingStatus = 0;
                     }
+                    mTrigger = false;//要滑动了，就不在触发位置上了
+                    updateScroll(offset);
+                    if (mAttached) {
+                        ev.setAction(MotionEvent.ACTION_DOWN);
+                        return super.dispatchTouchEvent(ev);
+                    }
+                    return true;
                 }
             }
             break;
@@ -215,10 +219,8 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                int top = mContentView.getTop();
-                mTop = top;
-                if (!mAttached && mFingerScrolled) {
-                    mFingerScrolled = false;
+                if (!mAttached && !mTrigger) {
+                    int top = mContentView.getTop();
                     if (mStatus > 0 && top > 120) {
                         top = top - 120;
                         mAutoScroller.onActionUp(top, 250);
@@ -228,6 +230,8 @@ public class RefreshLayout extends ViewGroup {
                     } else {
                         if (mHandlingStatus == 0) {
                             mAutoScroller.onActionUp(top, 250);
+                        } else {
+                            mTrigger = true;//此时也可以触发子View点击事件
                         }
                     }
                     ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -344,6 +348,13 @@ public class RefreshLayout extends ViewGroup {
             mScroller = new Scroller(getContext(), new DecelerateInterpolator());
         }
 
+        /**
+         * 只取消Runnable本身的调用，不手动结束mScroller，可以保证mScroller.computeScrollOffset()结果是按照我们预想的正常滑动结束。
+         * 只有3种情况：
+         * 1.触发刷新中状态；
+         * 2.触发加载中状态；
+         * 3.复位（top等于0）
+         */
         public void onActionDown() {
             removeCallbacks(this);
         }
@@ -358,10 +369,11 @@ public class RefreshLayout extends ViewGroup {
         public void run() {
             if (!mScroller.computeScrollOffset()) {
                 int top = mContentView.getTop();
-                mTop = top;
                 if (top > 0) {
+                    mTrigger = true;
                     mHandlingStatus = 1;
                 } else if (top < 0) {
+                    mTrigger = true;
                     mHandlingStatus = -1;
                 } else if (top == 0) {
                     mHandlingStatus = 0;
