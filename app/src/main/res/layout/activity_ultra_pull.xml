@@ -18,21 +18,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <android.support.v4.view.ViewPager
+                android:id="@+id/view_pager"
+                android:layout_width="match_parent"
+                android:layout_height="300dp" />
+
             <TextView
                 android:id="@+id/tv1"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="150dp"
                 android:background="#ff0000" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:background="#ff00ff" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:background="#ffff00" />
 
         </LinearLayout>
 
