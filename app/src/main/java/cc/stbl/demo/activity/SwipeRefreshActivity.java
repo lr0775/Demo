@@ -51,7 +51,7 @@ public class SwipeRefreshActivity extends BaseActivity {
                     public void run() {
                         mRefreshLayout.setRefreshing(false);
                     }
-                }, 100);
+                }, 5000);
             }
         });
     }

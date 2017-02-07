@@ -31,10 +31,9 @@ public class RefreshLayout extends ViewGroup {
     private OnRefreshListener mRefreshListener;
     private OnLoadMoreListener mLoadMoreListener;
 
-    private int mTrigger;
-    private boolean mHandling;
-
     private int mStatus;
+    private int mHandlingStatus; //刷新中或者加载中的状态，由用户手势触发，要么用代码结束，要么把刷新头滑动隐藏
+    private int mTop;
 
     private int mTouchSlop;
 
@@ -56,6 +55,7 @@ public class RefreshLayout extends ViewGroup {
     private float mLastX;
     private float mLastY;
     private boolean mAttached = true;
+    private boolean mFingerScrolled;
 
     private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
@@ -116,11 +116,11 @@ public class RefreshLayout extends ViewGroup {
             return;
         }
         if (mHeaderView != null) {
-            mHeaderView.layout(0, -mHeaderHeight, mHeaderWidth, 0);
+            mHeaderView.layout(0, mTop - mHeaderHeight, mHeaderWidth, mTop);
         }
-        mContentView.layout(0, 0, mTargetWidth, mTargetHeight);
+        mContentView.layout(0, mTop, mTargetWidth, mTargetHeight + mTop);
         if (mFooterView != null) {
-            mFooterView.layout(0, mLayoutHeight, mFooterWidth, mLayoutHeight + mFooterHeight);
+            mFooterView.layout(0, mLayoutHeight + mTop, mFooterWidth, mLayoutHeight + mTop + mFooterHeight);
         }
     }
 
@@ -140,6 +140,7 @@ public class RefreshLayout extends ViewGroup {
                 }
                 mLastX = mFirstX;
                 mLastY = mFirstY;
+                mFingerScrolled = false;
                 mAutoScroller.onActionDown();
                 super.dispatchTouchEvent(ev);
                 return true;
@@ -155,6 +156,7 @@ public class RefreshLayout extends ViewGroup {
                 mLastY = y;
                 if (mAttached) {
                     if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
+                        mFingerScrolled = true;
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
                                 mStatus = 1;
@@ -169,20 +171,28 @@ public class RefreshLayout extends ViewGroup {
                     }
                 }
                 if (!mAttached) {
-                    int top = mContentView.getTop();
-                    float ratio = -0.0010f * Math.abs(top) + 1;
-                    int offset = (int) (offsetY * ratio);
-                    float coorY = top + offset;
-                    if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
-                        offset = -top;
-                        mAttached = true;
+                    if (!mFingerScrolled) {
+                        if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
+                            mFingerScrolled = true;
+                        }
                     }
-                    updateScroll(offset);
-                    if (mAttached) {
-                        ev.setAction(MotionEvent.ACTION_DOWN);
-                        return super.dispatchTouchEvent(ev);
+                    if (mFingerScrolled) {
+                        int top = mContentView.getTop();
+                        float ratio = -0.0010f * Math.abs(top) + 1;
+                        int offset = (int) (offsetY * ratio);
+                        float coorY = top + offset;
+                        if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
+                            offset = -top;
+                            mAttached = true;
+                            mHandlingStatus = 0;
+                        }
+                        updateScroll(offset);
+                        if (mAttached) {
+                            ev.setAction(MotionEvent.ACTION_DOWN);
+                            return super.dispatchTouchEvent(ev);
+                        }
+                        return true;
                     }
-                    return true;
                 }
             }
             break;
@@ -205,24 +215,21 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (!mAttached && !mHandling) {
-                    int top = mContentView.getTop();
-                    if (mStatus > 0) {
-                        if (top > mHeaderHeight) {
-                            mTrigger = 1;
-                            top -= mHeaderHeight;
-                        } else {
-                            mTrigger = 0;
-                        }
-                    } else if (mStatus < 0) {
-                        if (top < -mHeaderHeight) {
-                            mTrigger = -1;
-                            top += mHeaderHeight;
-                        } else {
-                            mTrigger = 0;
+                int top = mContentView.getTop();
+                mTop = top;
+                if (!mAttached && mFingerScrolled) {
+                    mFingerScrolled = false;
+                    if (mStatus > 0 && top > 120) {
+                        top = top - 120;
+                        mAutoScroller.onActionUp(top, 250);
+                    } else if (mStatus < 0 && top < -120) {
+                        top = top + 120;
+                        mAutoScroller.onActionUp(top, 250);
+                    } else {
+                        if (mHandlingStatus == 0) {
+                            mAutoScroller.onActionUp(top, 250);
                         }
                     }
-                    mAutoScroller.onActionUp(-top, 250);
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     super.dispatchTouchEvent(ev);
                     return true;
@@ -312,6 +319,22 @@ public class RefreshLayout extends ViewGroup {
         mHorizontalMap.put(key, enabled);
     }
 
+    public void setOnRefreshListener(OnRefreshListener listener) {
+        mRefreshListener = listener;
+    }
+
+    public void setOnLoadMoreListener(OnLoadMoreListener listener) {
+        mLoadMoreListener = listener;
+    }
+
+    public interface OnRefreshListener {
+        void onRefresh();
+    }
+
+    public interface OnLoadMoreListener {
+        void onLoadMore();
+    }
+
     private class AutoScroller implements Runnable {
 
         private Scroller mScroller;
@@ -327,17 +350,24 @@ public class RefreshLayout extends ViewGroup {
 
         public void onActionUp(int dy, int duration) {
             mScrollLastY = 0;
-            mScroller.startScroll(0, 0, 0, dy, duration);
+            mScroller.startScroll(0, 0, 0, -dy, duration);
             post(this);
         }
 
         @Override
         public void run() {
             if (!mScroller.computeScrollOffset()) {
-                autoScrollFinished();
-                if (mContentView.getTop() == 0) {
+                int top = mContentView.getTop();
+                mTop = top;
+                if (top > 0) {
+                    mHandlingStatus = 1;
+                } else if (top < 0) {
+                    mHandlingStatus = -1;
+                } else if (top == 0) {
+                    mHandlingStatus = 0;
                     mAttached = true;
                 }
+                //Logger.e("finished, top = " + top + ", mHandlingStatus = " + mHandlingStatus);
                 return;
             }
             int currY = mScroller.getCurrY();
@@ -346,43 +376,6 @@ public class RefreshLayout extends ViewGroup {
             updateScroll(offset);
             post(this);
         }
-    }
-
-    private void autoScrollFinished() {
-        if (mTrigger > 0) {
-            mHandling = true;
-            if (mRefreshListener != null) {
-                mRefreshListener.onRefresh();
-            }
-        } else if (mTrigger < 0) {
-            mHandling = true;
-            if (mLoadMoreListener != null) {
-                mLoadMoreListener.onLoadMore();
-            }
-        } else if (mTrigger == 0) {
-            mHandling = false;
-        }
-        mTrigger = 0;
-    }
-
-    public void completeRefresh() {
-        mAutoScroller.onActionUp(-mHeaderHeight, 250);
-    }
-
-    public void setOnRefreshListener(OnRefreshListener listener) {
-        mRefreshListener = listener;
-    }
-
-    public void setOnLoadMoreListener(OnLoadMoreListener listener) {
-        mLoadMoreListener = listener;
-    }
-
-    public interface OnRefreshListener {
-        void onRefresh();
-    }
-
-    public interface OnLoadMoreListener {
-        void onLoadMore();
     }
 
 }

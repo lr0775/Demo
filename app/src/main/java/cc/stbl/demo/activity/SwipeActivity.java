@@ -34,7 +34,7 @@ public class SwipeActivity extends AppCompatActivity {
                     public void run() {
                         mLayout.setRefreshing(false);
                     }
-                }, 300);
+                }, 5000);
             }
         });
         mViewPager = (ViewPager) findViewById(R.id.view_pager);

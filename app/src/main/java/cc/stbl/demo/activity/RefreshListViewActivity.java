@@ -13,7 +13,6 @@ import java.util.Collections;
 import cc.stbl.demo.R;
 import cc.stbl.demo.adapter.BannerPagerAdapter;
 import cc.stbl.demo.adapter.RefreshListAdapter;
-import cc.stbl.demo.util.Logger;
 import cc.stbl.demo.util.Toaster;
 import cc.stbl.demo.view.RefreshLayout;
 
@@ -99,27 +98,6 @@ public class RefreshListViewActivity extends BaseActivity {
                 Toaster.show("点击了第 " + (position - 1) + " 项");
             }
         });
-
-        mRefreshLayout.setOnRefreshListener(new RefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                Logger.e("onRefresh");
-                mRefreshLayout.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mRefreshLayout.completeRefresh();
-                    }
-                }, 2000);
-            }
-        });
-
-        mRefreshLayout.setOnLoadMoreListener(new RefreshLayout.OnLoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                Logger.e("onLoadMore");
-            }
-        });
-
         addData();
     }
 
