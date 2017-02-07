@@ -65,6 +65,8 @@ public class RefreshLayout extends ViewGroup {
     private float mLastY;
     private boolean mAttached = true;
 
+    private boolean mSecAttached = true;
+
     private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
 
@@ -178,8 +180,23 @@ public class RefreshLayout extends ViewGroup {
                     }
                 }
                 if (!mAttached) {
-                    if (mTrigger && !(Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY))))) {
-                        return super.dispatchTouchEvent(ev);
+                    if (mTrigger) {
+                        if (mSecAttached) {
+                            if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
+                                if (offsetY > 0) {
+                                    if (onCheckCanRefresh()) {
+                                        mSecAttached = false;
+                                    }
+                                } else {
+                                    if (onCheckCanLoadMore()) {
+                                        mSecAttached = false;
+                                    }
+                                }
+                            }
+                        }
+                        if (mSecAttached) {
+                            return super.dispatchTouchEvent(ev);
+                        }
                     }
                     int top = mContentView.getTop();
                     float ratio = -0.0010f * Math.abs(top) + 1;
@@ -232,6 +249,7 @@ public class RefreshLayout extends ViewGroup {
                             mAutoScroller.onActionUp(top, 250);
                         } else {
                             mTrigger = true;//此时也可以触发子View点击事件
+                            mSecAttached = true;
                         }
                     }
                     ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -371,9 +389,11 @@ public class RefreshLayout extends ViewGroup {
                 int top = mContentView.getTop();
                 if (top > 0) {
                     mTrigger = true;
+                    mSecAttached = true;
                     mHandlingStatus = 1;
                 } else if (top < 0) {
                     mTrigger = true;
+                    mSecAttached = true;
                     mHandlingStatus = -1;
                 } else if (top == 0) {
                     mHandlingStatus = 0;
