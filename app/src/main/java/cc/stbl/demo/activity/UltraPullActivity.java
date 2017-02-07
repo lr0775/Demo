@@ -25,6 +25,7 @@ public class UltraPullActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ultra_pull);
 
         mPtrLayout = (PtrFrameLayout) findViewById(R.id.layout_ptr);
+        mPtrLayout.disableWhenHorizontalMove(false);
         mPtrLayout.setPtrHandler(new PtrDefaultHandler() {
             @Override
             public void onRefreshBegin(PtrFrameLayout frame) {
