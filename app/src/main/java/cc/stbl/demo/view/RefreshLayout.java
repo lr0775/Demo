@@ -44,9 +44,9 @@ public class RefreshLayout extends ViewGroup {
 
     private int mTouchSlop;
 
-    private View mHeaderView;
+    private RefreshHeaderView mHeaderView;
     private View mContentView;
-    private View mFooterView;
+    private LoadMoreFooterView mFooterView;
 
     private int mLayoutHeight;
     private int mHeaderWidth;
@@ -93,9 +93,9 @@ public class RefreshLayout extends ViewGroup {
         if (childCount == 0) {
             return;
         }
-        mHeaderView = findViewById(R.id.refresh_header_view);
+        mHeaderView = (RefreshHeaderView) findViewById(R.id.refresh_header_view);
         mContentView = findViewById(R.id.content_view);
-        mFooterView = findViewById(R.id.load_more_footer_view);
+        mFooterView = (LoadMoreFooterView) findViewById(R.id.load_more_footer_view);
     }
 
     @Override
@@ -170,12 +170,12 @@ public class RefreshLayout extends ViewGroup {
                     if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
-                                mHandlingStatus = 1;
+                                setHandlingStatus(1);
                                 mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
-                                mHandlingStatus = -1;
+                                setHandlingStatus(-1);
                                 mAttached = false;
                             }
                         }
@@ -199,7 +199,7 @@ public class RefreshLayout extends ViewGroup {
                             updateScroll(offset);
                             if (mAttached) {
                                 mOnAttached = true;
-                                mHandlingStatus = 0;
+                                setHandlingStatus(0);
                                 ev.setAction(MotionEvent.ACTION_DOWN);
                                 return super.dispatchTouchEvent(ev);
                             }
@@ -221,7 +221,7 @@ public class RefreshLayout extends ViewGroup {
                     updateScroll(offset);
                     if (mAttached) {
                         mOnAttached = true;
-                        mHandlingStatus = 0;
+                        setHandlingStatus(0);
                         ev.setAction(MotionEvent.ACTION_DOWN);
                         return super.dispatchTouchEvent(ev);
                     }
@@ -397,23 +397,32 @@ public class RefreshLayout extends ViewGroup {
 
     public void completeRefresh() {
         if (mHandlingStatus == 2) {
-            mHandlingStatus = 3;
+            setHandlingStatus(3);
             mTrigger = false;
             if (!mDraging) {
                 int top = mContentView.getTop();
-                mAutoScroller.onActionUp(top, 2500);
+                mAutoScroller.onActionUp(top, 250);
             }
         }
     }
 
     public void completeLoadMore() {
         if (mHandlingStatus == -2) {
-            mHandlingStatus = -3;
+            setHandlingStatus(-3);
             mTrigger = false;
             if (!mDraging) {
                 int top = mContentView.getTop();
-                mAutoScroller.onActionUp(top, 2500);
+                mAutoScroller.onActionUp(top, 250);
             }
+        }
+    }
+
+    private void setHandlingStatus(int status) {
+        mHandlingStatus = status;
+        if (status > 0) {
+            mHeaderView.setStatus(status);
+        } else if (status < 0) {
+            mFooterView.setStatus(status);
         }
     }
 
@@ -450,7 +459,7 @@ public class RefreshLayout extends ViewGroup {
                 if (top > 0) {
                     mTrigger = true;
                     if (mHandlingStatus == 1) {
-                        mHandlingStatus = 2;
+                        setHandlingStatus(2);
                         if (mRefreshListener != null) {
                             mRefreshListener.onRefresh();
                         }
@@ -458,13 +467,13 @@ public class RefreshLayout extends ViewGroup {
                 } else if (top < 0) {
                     mTrigger = true;
                     if (mHandlingStatus == -1) {
-                        mHandlingStatus = -2;
+                        setHandlingStatus(-2);
                         if (mLoadMoreListener != null) {
                             mLoadMoreListener.onLoadMore();
                         }
                     }
                 } else if (top == 0) {
-                    mHandlingStatus = 0;
+                    setHandlingStatus(0);
                     mAttached = true;
                 }
                 return;
@@ -475,6 +484,10 @@ public class RefreshLayout extends ViewGroup {
             updateScroll(offset);
             post(this);
         }
+    }
+
+    public interface UpdateViewCallback {
+        void setStatus(int status);
     }
 
 }

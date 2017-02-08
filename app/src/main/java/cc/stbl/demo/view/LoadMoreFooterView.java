@@ -13,10 +13,12 @@ import cc.stbl.demo.R;
  * Created by Administrator on 2017/1/4.
  */
 
-public class LoadMoreFooterView extends RelativeLayout {
+public class LoadMoreFooterView extends RelativeLayout implements RefreshLayout.UpdateViewCallback {
 
     private TextView mTv;
     private ProgressBar mPb;
+
+    private int mStatus;
 
     public LoadMoreFooterView(Context context) {
         this(context, null);
@@ -33,4 +35,24 @@ public class LoadMoreFooterView extends RelativeLayout {
         mPb = (ProgressBar) findViewById(R.id.pb);
     }
 
+    @Override
+    public void setStatus(int status) {
+        if (mStatus != status) {
+            switch (status) {
+                case -1:
+                    mTv.setText("上拉加载更多");
+                    mPb.setVisibility(INVISIBLE);
+                    break;
+                case -2:
+                    mTv.setText("加载中...");
+                    mPb.setVisibility(VISIBLE);
+                    break;
+                case -3:
+                    mTv.setText("加载完成");
+                    mPb.setVisibility(INVISIBLE);
+                    break;
+            }
+            mStatus = status;
+        }
+    }
 }

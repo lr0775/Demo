@@ -98,6 +98,31 @@ public class RefreshListViewActivity extends BaseActivity {
                 Toaster.show("点击了第 " + (position - 1) + " 项");
             }
         });
+
+        mRefreshLayout.setOnRefreshListener(new RefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.completeRefresh();
+                    }
+                }, 3000);
+            }
+        });
+
+        mRefreshLayout.setOnLoadMoreListener(new RefreshLayout.OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                mRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.completeLoadMore();
+                    }
+                }, 3000);
+            }
+        });
+
         addData();
     }
 
