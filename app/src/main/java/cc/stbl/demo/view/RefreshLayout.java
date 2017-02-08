@@ -161,7 +161,7 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
-                if (isHorizontalScroll()) {
+                if (isHorizontalScroll()) { //ViewPager的onPageScrollStateChanged回调方法很靠谱，很及时，没问题
                     return super.dispatchTouchEvent(ev);
                 }
                 if (mAttached) {
@@ -198,6 +198,7 @@ public class RefreshLayout extends ViewGroup {
                             updateScroll(offset);
                             if (mAttached) {
                                 mOnAttached = true;
+                                mHandlingStatus = 0;
                                 ev.setAction(MotionEvent.ACTION_DOWN);
                                 return super.dispatchTouchEvent(ev);
                             }
@@ -220,6 +221,7 @@ public class RefreshLayout extends ViewGroup {
                     updateScroll(offset);
                     if (mAttached) {
                         mOnAttached = true;
+                        mHandlingStatus = 0;
                         ev.setAction(MotionEvent.ACTION_DOWN);
                         return super.dispatchTouchEvent(ev);
                     }
@@ -246,8 +248,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if ((!mAttached && !mTrigger) || (mAttached && mOnAttached)) {
-                    mOnAttached = false;
+                if (!mAttached && !mTrigger) {
                     int top = mContentView.getTop();
                     if (mStatus > 0 && top > mHeaderHeight) {
                         top = top - mHeaderHeight;
@@ -262,6 +263,12 @@ public class RefreshLayout extends ViewGroup {
                             mTrigger = true;//此时也可以触发子View点击事件
                         }
                     }
+                    ev.setAction(MotionEvent.ACTION_CANCEL);
+                    super.dispatchTouchEvent(ev);
+                    return true;
+                }
+                if (mAttached && mOnAttached) {
+                    mOnAttached = false;
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     super.dispatchTouchEvent(ev);
                     return true;
@@ -367,6 +374,10 @@ public class RefreshLayout extends ViewGroup {
         void onLoadMore();
     }
 
+    public void completeRefresh() {
+
+    }
+
     private class AutoScroller implements Runnable {
 
         private Scroller mScroller;
@@ -399,10 +410,20 @@ public class RefreshLayout extends ViewGroup {
                 int top = mContentView.getTop();
                 if (top > 0) {
                     mTrigger = true;
-                    mHandlingStatus = 1;
+                    if (mHandlingStatus == 0) {
+                        mHandlingStatus = 1;
+                        if (mRefreshListener != null) {
+                            mRefreshListener.onRefresh();
+                        }
+                    }
                 } else if (top < 0) {
                     mTrigger = true;
-                    mHandlingStatus = -1;
+                    if (mHandlingStatus == 0) {
+                        mHandlingStatus = -1;
+                        if (mLoadMoreListener != null) {
+                            mLoadMoreListener.onLoadMore();
+                        }
+                    }
                 } else if (top == 0) {
                     mHandlingStatus = 0;
                     mAttached = true;

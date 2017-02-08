@@ -75,6 +75,26 @@ public class RefreshActivity extends BaseActivity {
                 mRefreshLayout.setVeritcalScrollEnabled(2, state == ViewPager.SCROLL_STATE_IDLE);
             }
         });
+
+        mRefreshLayout.setOnRefreshListener(new RefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                Toaster.show("刷新中...");
+                mRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.completeRefresh();
+                    }
+                }, 5000);
+            }
+        });
+
+        mRefreshLayout.setOnLoadMoreListener(new RefreshLayout.OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                Toaster.show("加载更多中...");
+            }
+        });
     }
 
 }
