@@ -65,6 +65,8 @@ public class RefreshLayout extends ViewGroup {
     private float mLastY;
     private boolean mAttached = true;
 
+    private boolean mOnAttached = false;
+
     private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
 
@@ -195,6 +197,7 @@ public class RefreshLayout extends ViewGroup {
                             mTrigger = false;//要滑动了，就不在触发位置上了
                             updateScroll(offset);
                             if (mAttached) {
+                                mOnAttached = true;
                                 ev.setAction(MotionEvent.ACTION_DOWN);
                                 return super.dispatchTouchEvent(ev);
                             }
@@ -216,6 +219,7 @@ public class RefreshLayout extends ViewGroup {
                     mTrigger = false;//要滑动了，就不在触发位置上了
                     updateScroll(offset);
                     if (mAttached) {
+                        mOnAttached = true;
                         ev.setAction(MotionEvent.ACTION_DOWN);
                         return super.dispatchTouchEvent(ev);
                     }
@@ -242,7 +246,8 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = INVALID_POINTER;
-                if (!mAttached && !mTrigger) {
+                if ((!mAttached && !mTrigger) || (mAttached && mOnAttached)) {
+                    mOnAttached = false;
                     int top = mContentView.getTop();
                     if (mStatus > 0 && top > mHeaderHeight) {
                         top = top - mHeaderHeight;
