@@ -238,11 +238,11 @@ public class RefreshLayout extends ViewGroup {
                 mActivePointerId = INVALID_POINTER;
                 if (!mAttached && !mTrigger) {
                     int top = mContentView.getTop();
-                    if (mStatus > 0 && top > 120) {
-                        top = top - 120;
+                    if (mStatus > 0 && top > mHeaderHeight) {
+                        top = top - mHeaderHeight;
                         mAutoScroller.onActionUp(top, 250);
-                    } else if (mStatus < 0 && top < -120) {
-                        top = top + 120;
+                    } else if (mStatus < 0 && top < -mFooterHeight) {
+                        top = top + mFooterHeight;
                         mAutoScroller.onActionUp(top, 250);
                     } else {
                         if (mHandlingStatus == 0) {
