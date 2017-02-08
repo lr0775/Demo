@@ -93,6 +93,12 @@ public class RefreshActivity extends BaseActivity {
             @Override
             public void onLoadMore() {
                 Toaster.show("加载更多中...");
+                mRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRefreshLayout.completeLoadMore();
+                    }
+                }, 5000);
             }
         });
     }

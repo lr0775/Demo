@@ -375,7 +375,21 @@ public class RefreshLayout extends ViewGroup {
     }
 
     public void completeRefresh() {
+        if (mHandlingStatus > 0) {
+            mHandlingStatus = 0;
+            mTrigger = false;
+            int top = mContentView.getTop();
+            mAutoScroller.onActionUp(top, 250);
+        }
+    }
 
+    public void completeLoadMore() {
+        if (mHandlingStatus < 0) {
+            mHandlingStatus = 0;
+            mTrigger = false;
+            int top = mContentView.getTop();
+            mAutoScroller.onActionUp(top, 250);
+        }
     }
 
     private class AutoScroller implements Runnable {
