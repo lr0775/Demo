@@ -13,7 +13,6 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
-import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
@@ -65,8 +64,6 @@ public class RefreshLayout extends ViewGroup {
     private float mLastX;
     private float mLastY;
     private boolean mAttached = true;
-
-    private boolean mSecAttached = true;
 
     private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
@@ -141,7 +138,6 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                Logger.e("aciton--------Down");
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -155,7 +151,6 @@ public class RefreshLayout extends ViewGroup {
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
-                Logger.e("aciton--------Move");
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float diffX = x - mFirstX;
@@ -184,20 +179,28 @@ public class RefreshLayout extends ViewGroup {
                 }
                 if (!mAttached) {
                     if (mTrigger) {
-                        if (mSecAttached) {
-                            if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
-                                if (offsetY > 0) {
-                                    if (onCheckCanRefresh()) {
-                                        mSecAttached = false;
-                                    }
-                                } else {
-                                    if (onCheckCanLoadMore()) {
-                                        mSecAttached = false;
-                                    }
-                                }
-                            }
+                        if (Math.abs(diffX) <= mTouchSlop && Math.abs(diffY) <= mTouchSlop) {
+                            return super.dispatchTouchEvent(ev);
                         }
-                        if (mSecAttached) {
+                        if (Math.abs(diffY) > mTouchSlop) {
+                            int top = mContentView.getTop();
+                            float ratio = -0.0010f * Math.abs(top) + 1;
+                            int offset = (int) (offsetY * ratio);
+                            float coorY = top + offset;
+                            if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
+                                offset = -top;
+                                mAttached = true;
+                                mHandlingStatus = 0;
+                            }
+                            mTrigger = false;//要滑动了，就不在触发位置上了
+                            updateScroll(offset);
+                            if (mAttached) {
+                                ev.setAction(MotionEvent.ACTION_DOWN);
+                                return super.dispatchTouchEvent(ev);
+                            }
+                            return true;
+                        }
+                        if (Math.abs(diffX) > mTouchSlop && Math.abs(diffX) * 0.5f > Math.abs(diffY)) {
                             return super.dispatchTouchEvent(ev);
                         }
                     }
@@ -238,7 +241,6 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                Logger.e("aciton--------Up/Cancel");
                 mActivePointerId = INVALID_POINTER;
                 if (!mAttached && !mTrigger) {
                     int top = mContentView.getTop();
@@ -253,7 +255,6 @@ public class RefreshLayout extends ViewGroup {
                             mAutoScroller.onActionUp(top, 250);
                         } else {
                             mTrigger = true;//此时也可以触发子View点击事件
-                            mSecAttached = true;
                         }
                     }
                     ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -393,17 +394,14 @@ public class RefreshLayout extends ViewGroup {
                 int top = mContentView.getTop();
                 if (top > 0) {
                     mTrigger = true;
-                    mSecAttached = true;
                     mHandlingStatus = 1;
                 } else if (top < 0) {
                     mTrigger = true;
-                    mSecAttached = true;
                     mHandlingStatus = -1;
                 } else if (top == 0) {
                     mHandlingStatus = 0;
                     mAttached = true;
                 }
-                //Logger.e("finished, top = " + top + ", mHandlingStatus = " + mHandlingStatus);
                 return;
             }
             int currY = mScroller.getCurrY();
