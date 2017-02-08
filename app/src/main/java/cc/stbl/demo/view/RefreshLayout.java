@@ -31,8 +31,6 @@ public class RefreshLayout extends ViewGroup {
     private OnRefreshListener mRefreshListener;
     private OnLoadMoreListener mLoadMoreListener;
 
-    private int mStatus;
-
     /**
      * 刷新中或者加载中的状态，由用户手势触发，要么用代码结束这个状态，要么把刷新头滑动隐藏结束这个状态，
      * 这个状态并不代表top一定等于刷新头的高度，top只要大于0就可以了, top等于0代表结束了刷新中的状态，不回调OnRefreshListener。
@@ -66,6 +64,8 @@ public class RefreshLayout extends ViewGroup {
     private boolean mAttached = true;
 
     private boolean mOnAttached = false;
+
+    private boolean mDraging = false;
 
     private AutoScroller mAutoScroller;
     private SparseBooleanArray mHorizontalMap;
@@ -140,6 +140,7 @@ public class RefreshLayout extends ViewGroup {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                mDraging = true;
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -153,6 +154,7 @@ public class RefreshLayout extends ViewGroup {
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
+                mDraging = true;
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float diffX = x - mFirstX;
@@ -168,12 +170,12 @@ public class RefreshLayout extends ViewGroup {
                     if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
-                                mStatus = 1;
+                                mHandlingStatus = 1;
                                 mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
-                                mStatus = -1;
+                                mHandlingStatus = -1;
                                 mAttached = false;
                             }
                         }
@@ -189,10 +191,9 @@ public class RefreshLayout extends ViewGroup {
                             float ratio = -0.0010f * Math.abs(top) + 1;
                             int offset = (int) (offsetY * ratio);
                             float coorY = top + offset;
-                            if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
+                            if ((mHandlingStatus > 0 && coorY <= 0) || (mHandlingStatus < 0 && coorY >= 0)) {
                                 offset = -top;
                                 mAttached = true;
-                                mHandlingStatus = 0;
                             }
                             mTrigger = false;//要滑动了，就不在触发位置上了
                             updateScroll(offset);
@@ -212,10 +213,9 @@ public class RefreshLayout extends ViewGroup {
                     float ratio = -0.0010f * Math.abs(top) + 1;
                     int offset = (int) (offsetY * ratio);
                     float coorY = top + offset;
-                    if ((mStatus > 0 && coorY <= 0) || (mStatus < 0 && coorY >= 0)) {
+                    if ((mHandlingStatus > 0 && coorY <= 0) || (mHandlingStatus < 0 && coorY >= 0)) {
                         offset = -top;
                         mAttached = true;
-                        mHandlingStatus = 0;
                     }
                     mTrigger = false;//要滑动了，就不在触发位置上了
                     updateScroll(offset);
@@ -247,21 +247,42 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                mDraging = false;
                 mActivePointerId = INVALID_POINTER;
                 if (!mAttached && !mTrigger) {
                     int top = mContentView.getTop();
-                    if (mStatus > 0 && top > mHeaderHeight) {
-                        top = top - mHeaderHeight;
-                        mAutoScroller.onActionUp(top, 250);
-                    } else if (mStatus < 0 && top < -mFooterHeight) {
-                        top = top + mFooterHeight;
-                        mAutoScroller.onActionUp(top, 250);
-                    } else {
-                        if (mHandlingStatus == 0) {
+                    if (mHandlingStatus == 1) {
+                        if (top > mHeaderHeight) {
+                            top = top - mHeaderHeight;
+                            mAutoScroller.onActionUp(top, 250);
+                        } else {
+                            mAutoScroller.onActionUp(top, 250);
+                        }
+                    } else if (mHandlingStatus == -1) {
+                        if (top < -mFooterHeight) {
+                            top = top + mFooterHeight;
+                            mAutoScroller.onActionUp(top, 250);
+                        } else {
+                            mAutoScroller.onActionUp(top, 250);
+                        }
+                    } else if (mHandlingStatus == 2) {
+                        if (top > mHeaderHeight) {
+                            top = top - mHeaderHeight;
                             mAutoScroller.onActionUp(top, 250);
                         } else {
                             mTrigger = true;//此时也可以触发子View点击事件
                         }
+                    } else if (mHandlingStatus == -2) {
+                        if (top < -mFooterHeight) {
+                            top = top + mFooterHeight;
+                            mAutoScroller.onActionUp(top, 250);
+                        } else {
+                            mTrigger = true;//此时也可以触发子View点击事件
+                        }
+                    } else if (mHandlingStatus == 3) {
+                        mAutoScroller.onActionUp(top, 250);
+                    } else if (mHandlingStatus == -3) {
+                        mAutoScroller.onActionUp(top, 250);
                     }
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     super.dispatchTouchEvent(ev);
@@ -337,9 +358,9 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void updateScroll(int offset) {
-        if (mStatus > 0) {
+        if (mHandlingStatus > 0) {
             mHeaderView.offsetTopAndBottom(offset);
-        } else if (mStatus < 0) {
+        } else if (mHandlingStatus < 0) {
             mFooterView.offsetTopAndBottom(offset);
         }
         mContentView.offsetTopAndBottom(offset);
@@ -375,20 +396,24 @@ public class RefreshLayout extends ViewGroup {
     }
 
     public void completeRefresh() {
-        if (mHandlingStatus > 0) {
-            mHandlingStatus = 0;
+        if (mHandlingStatus == 2) {
+            mHandlingStatus = 3;
             mTrigger = false;
-            int top = mContentView.getTop();
-            mAutoScroller.onActionUp(top, 250);
+            if (!mDraging) {
+                int top = mContentView.getTop();
+                mAutoScroller.onActionUp(top, 2500);
+            }
         }
     }
 
     public void completeLoadMore() {
-        if (mHandlingStatus < 0) {
-            mHandlingStatus = 0;
+        if (mHandlingStatus == -2) {
+            mHandlingStatus = -3;
             mTrigger = false;
-            int top = mContentView.getTop();
-            mAutoScroller.onActionUp(top, 250);
+            if (!mDraging) {
+                int top = mContentView.getTop();
+                mAutoScroller.onActionUp(top, 2500);
+            }
         }
     }
 
@@ -424,16 +449,16 @@ public class RefreshLayout extends ViewGroup {
                 int top = mContentView.getTop();
                 if (top > 0) {
                     mTrigger = true;
-                    if (mHandlingStatus == 0) {
-                        mHandlingStatus = 1;
+                    if (mHandlingStatus == 1) {
+                        mHandlingStatus = 2;
                         if (mRefreshListener != null) {
                             mRefreshListener.onRefresh();
                         }
                     }
                 } else if (top < 0) {
                     mTrigger = true;
-                    if (mHandlingStatus == 0) {
-                        mHandlingStatus = -1;
+                    if (mHandlingStatus == -1) {
+                        mHandlingStatus = -2;
                         if (mLoadMoreListener != null) {
                             mLoadMoreListener.onLoadMore();
                         }
