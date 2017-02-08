@@ -13,6 +13,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
+import cc.stbl.demo.util.Logger;
 
 /**
  * Created by Administrator on 2016/12/6.
@@ -137,12 +138,10 @@ public class RefreshLayout extends ViewGroup {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (isHorizontalScroll()) {
-            return super.dispatchTouchEvent(ev);
-        }
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                Logger.e("aciton--------Down");
                 mActivePointerId = ev.getPointerId(0);
                 mFirstX = getMotionEventX(ev, mActivePointerId);
                 mFirstY = getMotionEventY(ev, mActivePointerId);
@@ -156,6 +155,7 @@ public class RefreshLayout extends ViewGroup {
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
+                Logger.e("aciton--------Move");
                 float x = getMotionEventX(ev, mActivePointerId);
                 float y = getMotionEventY(ev, mActivePointerId);
                 float diffX = x - mFirstX;
@@ -164,6 +164,9 @@ public class RefreshLayout extends ViewGroup {
                 float offsetY = y - mLastY;
                 mLastX = x;
                 mLastY = y;
+                if (isHorizontalScroll()) {
+                    return super.dispatchTouchEvent(ev);
+                }
                 if (mAttached) {
                     if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
                         if (offsetY > 0) {
@@ -235,6 +238,7 @@ public class RefreshLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                Logger.e("aciton--------Up/Cancel");
                 mActivePointerId = INVALID_POINTER;
                 if (!mAttached && !mTrigger) {
                     int top = mContentView.getTop();
