@@ -32,7 +32,7 @@ public class RefreshLayout extends ViewGroup {
     private OnLoadMoreListener mLoadMoreListener;
 
     /**
-     * 刷新中或者加载中的状态，由用户手势触发，要么用代码结束这个状态，要么把刷新头滑动隐藏结束这个状态，
+     * 刷新中或者加载中的状态，由用户手势触发，只能用代码结束这个状态
      * 这个状态并不代表top一定等于刷新头的高度，top只要大于0就可以了, top等于0代表结束了刷新中的状态，不回调OnRefreshListener。
      */
     private int mHandlingStatus;
@@ -61,6 +61,7 @@ public class RefreshLayout extends ViewGroup {
     private float mFirstY;
     private float mLastX;
     private float mLastY;
+    private boolean mAttached = true;
 
     private boolean mOnAttached = false;
 
@@ -165,20 +166,26 @@ public class RefreshLayout extends ViewGroup {
                 if (isHorizontalScroll()) { //ViewPager的onPageScrollStateChanged回调方法很靠谱，很及时，没问题
                     return super.dispatchTouchEvent(ev);
                 }
-                if (mHandlingStatus == 0) {
+                if (mAttached) {
                     if (Math.abs(diffY) > mTouchSlop && (!(Math.abs(diffX) * 0.5f > Math.abs(diffY)))) {
                         if (offsetY > 0) {
                             if (onCheckCanRefresh()) {
-                                setHandlingStatus(1);
+                                if (mHandlingStatus == 0) {
+                                    setHandlingStatus(1);
+                                }
+                                mAttached = false;
                             }
                         } else {
                             if (onCheckCanLoadMore()) {
-                                setHandlingStatus(-1);
+                                if (mHandlingStatus == 0) {
+                                    setHandlingStatus(-1);
+                                }
+                                mAttached = false;
                             }
                         }
                     }
                 }
-                if (mHandlingStatus != 0) {
+                if (!mAttached) {
                     if (mTrigger) {
                         if (Math.abs(diffX) <= mTouchSlop && Math.abs(diffY) <= mTouchSlop) {
                             return super.dispatchTouchEvent(ev);
@@ -190,11 +197,11 @@ public class RefreshLayout extends ViewGroup {
                             float coorY = top + offset;
                             if ((mHandlingStatus > 0 && coorY <= 0) || (mHandlingStatus < 0 && coorY >= 0)) {
                                 offset = -top;
-                                setHandlingStatus(0);
+                                mAttached = true;
                             }
                             mTrigger = false;//要滑动了，就不在触发位置上了
                             updateScroll(offset);
-                            if (mHandlingStatus == 0) {
+                            if (mAttached) {
                                 mOnAttached = true;
                                 ev.setAction(MotionEvent.ACTION_DOWN);
                                 return super.dispatchTouchEvent(ev);
@@ -216,11 +223,11 @@ public class RefreshLayout extends ViewGroup {
                     float coorY = top + offset;
                     if ((mHandlingStatus > 0 && coorY <= 0) || (mHandlingStatus < 0 && coorY >= 0)) {
                         offset = -top;
-                        setHandlingStatus(0);
+                        mAttached = true;
                     }
                     mTrigger = false;//要滑动了，就不在触发位置上了
                     updateScroll(offset);
-                    if (mHandlingStatus == 0) {
+                    if (mAttached) {
                         mOnAttached = true;
                         ev.setAction(MotionEvent.ACTION_DOWN);
                         return super.dispatchTouchEvent(ev);
@@ -233,7 +240,7 @@ public class RefreshLayout extends ViewGroup {
                 onSecondPointerDown(ev);
                 mLastX = getMotionEventX(ev, mActivePointerId);
                 mLastY = getMotionEventY(ev, mActivePointerId);
-                if (mHandlingStatus != 0) {
+                if (!mAttached) {
                     return true;
                 }
                 break;
@@ -241,7 +248,7 @@ public class RefreshLayout extends ViewGroup {
                 onSecondPointerUp(ev);
                 mLastX = getMotionEventX(ev, mActivePointerId);
                 mLastY = getMotionEventY(ev, mActivePointerId);
-                if (mHandlingStatus != 0) {
+                if (!mAttached) {
                     return true;
                 }
                 break;
@@ -249,7 +256,7 @@ public class RefreshLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
                 mDraging = false;
                 mActivePointerId = INVALID_POINTER;
-                if (mHandlingStatus != 0 && !mTrigger) {
+                if (!mAttached && !mTrigger) {
                     int top = mContentView.getTop();
                     if (mHandlingStatus == 1) {
                         if (top > mHeaderHeight) {
@@ -288,7 +295,7 @@ public class RefreshLayout extends ViewGroup {
                     super.dispatchTouchEvent(ev);
                     return true;
                 }
-                if (mHandlingStatus == 0 && mOnAttached) {
+                if (mAttached && mOnAttached) {
                     mOnAttached = false;
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     super.dispatchTouchEvent(ev);
@@ -480,6 +487,7 @@ public class RefreshLayout extends ViewGroup {
                     }
                 } else if (top == 0) {
                     setHandlingStatus(0);
+                    mAttached = true;
                 }
                 return;
             }

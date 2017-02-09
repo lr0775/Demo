@@ -107,7 +107,7 @@ public class RefreshListViewActivity extends BaseActivity {
                     public void run() {
                         mRefreshLayout.completeRefresh();
                     }
-                }, 3000);
+                }, 5000);
             }
         });
 
@@ -119,7 +119,7 @@ public class RefreshListViewActivity extends BaseActivity {
                     public void run() {
                         mRefreshLayout.completeLoadMore();
                     }
-                }, 3000);
+                }, 5000);
             }
         });
 
