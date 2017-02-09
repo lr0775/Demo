@@ -43,6 +43,7 @@ public class RefreshHeaderView extends RelativeLayout implements RefreshLayout.U
     public void setStatus(int status) {
         if (mStatus != status) {
             switch (status) {
+                case 0:
                 case 1:
                     mTv.setText("下拉刷新");
                     mPb.setVisibility(INVISIBLE);

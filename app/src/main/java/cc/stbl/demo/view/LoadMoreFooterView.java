@@ -41,6 +41,7 @@ public class LoadMoreFooterView extends RelativeLayout implements RefreshLayout.
     public void setStatus(int status) {
         if (mStatus != status) {
             switch (status) {
+                case 0:
                 case -1:
                     mTv.setText("上拉加载更多");
                     mPb.setVisibility(INVISIBLE);

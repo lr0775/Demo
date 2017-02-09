@@ -418,12 +418,18 @@ public class RefreshLayout extends ViewGroup {
     }
 
     private void setHandlingStatus(int status) {
-        mHandlingStatus = status;
         if (status > 0) {
             mHeaderView.setStatus(status);
         } else if (status < 0) {
             mFooterView.setStatus(status);
+        } else {
+            if (mHandlingStatus > 0) {
+                mHeaderView.setStatus(status);
+            } else if (mHandlingStatus < 0) {
+                mFooterView.setStatus(status);
+            }
         }
+        mHandlingStatus = status;
     }
 
     private class AutoScroller implements Runnable {
