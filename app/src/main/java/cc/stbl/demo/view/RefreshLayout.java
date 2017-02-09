@@ -172,6 +172,8 @@ public class RefreshLayout extends ViewGroup {
                             if (onCheckCanRefresh()) {
                                 if (mHandlingStatus == 0) {
                                     setHandlingStatus(1);
+                                } else if (mHandlingStatus == 4) {
+                                    setHandlingStatus(2);
                                 }
                                 mAttached = false;
                             }
@@ -179,6 +181,8 @@ public class RefreshLayout extends ViewGroup {
                             if (onCheckCanLoadMore()) {
                                 if (mHandlingStatus == 0) {
                                     setHandlingStatus(-1);
+                                } else if (mHandlingStatus == -4) {
+                                    setHandlingStatus(-2);
                                 }
                                 mAttached = false;
                             }
@@ -203,6 +207,15 @@ public class RefreshLayout extends ViewGroup {
                             updateScroll(offset);
                             if (mAttached) {
                                 mOnAttached = true;
+                                if (mHandlingStatus == 1) {
+                                    setHandlingStatus(0);
+                                } else if (mHandlingStatus == -1) {
+                                    setHandlingStatus(0);
+                                } else if (mHandlingStatus == 2) {
+                                    setHandlingStatus(4);
+                                } else if (mHandlingStatus == -2) {
+                                    setHandlingStatus(-4);
+                                }
                                 ev.setAction(MotionEvent.ACTION_DOWN);
                                 return super.dispatchTouchEvent(ev);
                             }
@@ -229,6 +242,15 @@ public class RefreshLayout extends ViewGroup {
                     updateScroll(offset);
                     if (mAttached) {
                         mOnAttached = true;
+                        if (mHandlingStatus == 1) {
+                            setHandlingStatus(0);
+                        } else if (mHandlingStatus == -1) {
+                            setHandlingStatus(0);
+                        } else if (mHandlingStatus == 2) {
+                            setHandlingStatus(4);
+                        } else if (mHandlingStatus == -2) {
+                            setHandlingStatus(-4);
+                        }
                         ev.setAction(MotionEvent.ACTION_DOWN);
                         return super.dispatchTouchEvent(ev);
                     }
@@ -403,23 +425,31 @@ public class RefreshLayout extends ViewGroup {
     }
 
     public void completeRefresh() {
-        if (mHandlingStatus == 2) {
+        if (mHandlingStatus == 2 || mHandlingStatus == 4) {
             setHandlingStatus(3);
             mTrigger = false;
-            if (!mDraging) {
-                int top = mContentView.getTop();
-                mAutoScroller.onActionUp(top, 250);
+            if (!mAttached) {
+                if (!mDraging) {
+                    int top = mContentView.getTop();
+                    mAutoScroller.onActionUp(top, 250);
+                }
+            } else {
+                setHandlingStatus(0);
             }
         }
     }
 
     public void completeLoadMore() {
-        if (mHandlingStatus == -2) {
+        if (mHandlingStatus == -2 || mHandlingStatus == -4) {
             setHandlingStatus(-3);
             mTrigger = false;
-            if (!mDraging) {
-                int top = mContentView.getTop();
-                mAutoScroller.onActionUp(top, 250);
+            if (!mAttached) {
+                if (!mDraging) {
+                    int top = mContentView.getTop();
+                    mAutoScroller.onActionUp(top, 250);
+                }
+            } else {
+                setHandlingStatus(0);
             }
         }
     }
