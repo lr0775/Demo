@@ -18,7 +18,9 @@ public class LoadMoreFooterView extends RelativeLayout implements RefreshLayout.
     private TextView mTv;
     private ProgressBar mPb;
 
-    private int mStatus;
+    private int mStatus = Integer.MIN_VALUE;
+
+    private boolean mTrigger;
 
     public LoadMoreFooterView(Context context) {
         this(context, null);
@@ -53,6 +55,21 @@ public class LoadMoreFooterView extends RelativeLayout implements RefreshLayout.
                     break;
             }
             mStatus = status;
+        }
+    }
+
+    @Override
+    public void onTopChange(int top) {
+        if (!mTrigger) {
+            if (top < -getMeasuredHeight()) {
+                mTrigger = true;
+                mTv.setText("释放立即加载");
+            }
+        } else {
+            if (top >= -getMeasuredHeight()) {
+                mTrigger = false;
+                mTv.setText("上拉加载更多");
+            }
         }
     }
 }

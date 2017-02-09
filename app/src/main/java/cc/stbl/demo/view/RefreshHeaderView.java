@@ -20,6 +20,8 @@ public class RefreshHeaderView extends RelativeLayout implements RefreshLayout.U
 
     private int mStatus = Integer.MAX_VALUE;
 
+    private boolean mTrigger;
+
     public RefreshHeaderView(Context context) {
         this(context, null);
     }
@@ -55,6 +57,21 @@ public class RefreshHeaderView extends RelativeLayout implements RefreshLayout.U
                     break;
             }
             mStatus = status;
+        }
+    }
+
+    @Override
+    public void onTopChange(int top) {
+        if (!mTrigger) {
+            if (top > getMeasuredHeight()) {
+                mTrigger = true;
+                mTv.setText("释放立即刷新");
+            }
+        } else {
+            if (top <= getMeasuredHeight()) {
+                mTrigger = false;
+                mTv.setText("下拉刷新");
+            }
         }
     }
 }
