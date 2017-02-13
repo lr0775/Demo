@@ -117,6 +117,7 @@ public class RefreshListViewActivity extends BaseActivity {
                 mRefreshLayout.postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        addData();
                         mRefreshLayout.completeLoadMore();
                     }
                 }, 5000);
@@ -127,7 +128,8 @@ public class RefreshListViewActivity extends BaseActivity {
     }
 
     private void addData() {
-        for (int i = 0; i < 10; i++) {
+        int size = mList.size();
+        for (int i = size; i < size + 10; i++) {
             mList.add("第 " + i + " 项");
         }
         mListAdapter.notifyDataSetChanged();

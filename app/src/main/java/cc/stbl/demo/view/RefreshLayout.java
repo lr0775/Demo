@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.AbsListView;
 import android.widget.Scroller;
 
 import cc.stbl.demo.R;
@@ -429,10 +430,15 @@ public class RefreshLayout extends ViewGroup {
             setHandlingStatus(3);
             mTrigger = false;
             if (!mAttached) {
-                if (!mDraging) {
-                    int top = mContentView.getTop();
-                    mAutoScroller.onActionUp(top, 250);
-                }
+                postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!mDraging) {
+                            int top = mContentView.getTop();
+                            mAutoScroller.onActionUp(top, 250);
+                        }
+                    }
+                }, 500);
             } else {
                 setHandlingStatus(0);
             }
@@ -447,6 +453,10 @@ public class RefreshLayout extends ViewGroup {
                 if (!mDraging) {
                     int top = mContentView.getTop();
                     mAutoScroller.onActionUp(top, 250);
+                    if (mContentView instanceof AbsListView) {
+                        AbsListView absListView = (AbsListView) mContentView;
+                        absListView.smoothScrollBy(-top, 550);
+                    }
                 }
             } else {
                 setHandlingStatus(0);
